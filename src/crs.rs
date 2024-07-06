@@ -28,10 +28,6 @@ impl Tokyo {
     /// let tokyo = LatLon::from_dms((35, 0, 0.0), (135, 0, 0.0));
     /// let jgd2000 = Tokyo::new(tokyo).to_jgd2000().degrees();
     /// ```
-    ///
-    /// # See also
-    ///
-    /// すでに度単位の座標が分かっている場合は、代わりに [`from_tokyo`] を使える。
     pub fn new(degrees: LatLon) -> Self {
         Self { degrees }
     }
@@ -98,10 +94,6 @@ impl Tokyo97 {
     /// let tokyo97 = LatLon::from_dms((35, 0, 0.0), (135, 0, 0.0));
     /// let jgd2000 = Tokyo97::new(tokyo97).to_jgd2000().degrees();
     /// ```
-    ///
-    /// # See also
-    ///
-    /// すでに度単位の座標が分かっている場合は、代わりに [`from_tokyo97`] を使える。
     pub fn new(degrees: LatLon) -> Self {
         Self { degrees }
     }
@@ -154,10 +146,6 @@ impl Jgd2000 {
     /// let jgd2000 = LatLon::from_dms((35, 0, 0.0), (135, 0, 0.0));
     /// let jgd2011 = Jgd2000::new(jgd2000).to_jgd2011().degrees();
     /// ```
-    ///
-    /// # See also
-    ///
-    /// すでに度単位の座標が分かっている場合は、代わりに [`from_jgd2000`] を使える。
     pub fn new(degrees: LatLon) -> Self {
         Self { degrees }
     }
