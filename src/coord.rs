@@ -3,14 +3,10 @@ use std::ops::{Add, Div, Mul, Sub};
 /// 緯度経度。
 /// Latitude and longitude of a coordinate.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct LatLon {
-    lat: f64,
-    lon: f64,
-}
+pub struct LatLon<T = f64>(pub T, pub T);
 impl LatLon {
     pub(crate) fn new<T: Into<f64>>(lat: T, lon: T) -> Self {
-        let (lat, lon) = (lat.into(), lon.into());
-        Self { lat, lon }
+        Self(lat.into(), lon.into())
     }
 
     /// 度分秒から変換する。
@@ -50,36 +46,36 @@ impl LatLon {
     /// 度分秒に変換する。
     /// Converts to degrees, minutes, seconds.
     pub fn to_dms(&self) -> (Dms, Dms) {
-        [self.lat, self.lon].map(Dms::from_degrees).into()
+        [self.lat(), self.lon()].map(Dms::from_degrees).into()
     }
 
-    pub(crate) fn lat(&self) -> f64 {
-        self.lat
+    pub fn lat(&self) -> f64 {
+        self.0
     }
 
-    pub(crate) fn lon(&self) -> f64 {
-        self.lon
+    pub fn lon(&self) -> f64 {
+        self.1
     }
 
     pub(crate) fn map(mut self, f: impl Fn(f64) -> f64) -> Self {
-        self.lat = f(self.lat);
-        self.lon = f(self.lon);
+        self.0 = f(self.0);
+        self.1 = f(self.1);
         self
     }
 }
 impl Add<LatLon> for LatLon {
     type Output = Self;
     fn add(mut self, rhs: LatLon) -> Self::Output {
-        self.lat += rhs.lat;
-        self.lon += rhs.lon;
+        self.0 += rhs.0;
+        self.1 += rhs.1;
         self
     }
 }
 impl Sub<LatLon> for LatLon {
     type Output = Self;
     fn sub(mut self, rhs: LatLon) -> Self::Output {
-        self.lat -= rhs.lat;
-        self.lon -= rhs.lon;
+        self.0 -= rhs.0;
+        self.1 -= rhs.1;
         self
     }
 }
@@ -97,7 +93,7 @@ impl Div<f64> for LatLon {
 }
 impl From<LatLon> for (f64, f64) {
     fn from(degree: LatLon) -> Self {
-        (degree.lat, degree.lon)
+        (degree.lat(), degree.lon())
     }
 }
 

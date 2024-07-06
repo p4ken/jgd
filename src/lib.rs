@@ -11,7 +11,9 @@
 //! 旧日本測地系 [`Tokyo`] の北緯35度・東経135度を、世界測地系 [`Jgd2011`] に変換する。
 //!
 //! ```
-//! let (lat, lon) = jgd::from_tokyo(35.0, 135.0)
+//! use jgd::{LatLon, Tokyo};
+//!
+//! let (lat, lon) = Tokyo::new(LatLon(35.0, 135.0))
 //!     .to_jgd2000()
 //!     .to_jgd2011()
 //!     .into();
@@ -22,12 +24,16 @@
 //! [`geo`](https://docs.rs/geo/latest/geo/index.html#types) の形状を測地系変換する。
 //!
 //! ```
+//! use jgd::{LatLon, Tokyo};
 //! use geo::{Coord, LineString, MapCoords};
 //!
 //! let tokyo_datum = LineString::from(vec![(135.0, 35.0), (135.1, 35.1)]);
 //! let jgd2011 = tokyo_datum.map_coords(|Coord { x, y }| {
 //!     // 順序に注意: lat, lon <=> y, x
-//!     let (y, x) = jgd::from_tokyo(y, x).to_jgd2000().to_jgd2011().into();
+//!     let (y, x) = Tokyo::new(LatLon(y, x))
+//!         .to_jgd2000()
+//!         .to_jgd2011()
+//!         .into();
 //!     Coord { x, y }
 //! });
 //! ```
@@ -71,7 +77,7 @@ mod island;
 mod par;
 
 pub use coord::LatLon;
-pub use crs::{from_jgd2000, from_tokyo, from_tokyo97, Jgd2000, Jgd2011, Tokyo, Tokyo97};
+pub use crs::{Jgd2000, Jgd2011, Tokyo, Tokyo97};
 pub use grid::Grid;
 #[cfg(feature = "tky2jgd")]
 pub use grid::TKY2JGD;

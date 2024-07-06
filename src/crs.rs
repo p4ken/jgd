@@ -10,48 +10,6 @@ use crate::TKY2JGD;
 #[cfg(feature = "patchjgd")]
 use crate::TOUHOKUTAIHEIYOUOKI2011;
 
-/// [`Tokyo`] から変換する。
-/// Transform from a coordinate in Tokyo Datum.
-///
-/// # Examples
-///
-/// ```
-/// let (lat, lon) = jgd::from_tokyo(35.0, 135.0).to_jgd2000().into();
-/// ```
-pub fn from_tokyo(lat: f64, lon: f64) -> Tokyo {
-    Tokyo::new(LatLon::new(lat, lon))
-}
-
-/// [`Tokyo97`] から変換する。
-/// Transform from a coordinate in Tokyo97.
-///
-/// # Examples
-///
-/// ```
-/// let (lat, lon) = jgd::from_tokyo97(35.0, 135.0).to_jgd2000().into();
-/// ```
-pub fn from_tokyo97(lat: f64, lon: f64) -> Tokyo97 {
-    Tokyo97::new(LatLon::new(lat, lon))
-}
-
-/// [`Jgd2000`] から変換する。
-/// Transform from a coordinate in JGD2000.
-///
-/// # Examples
-///
-/// ```
-/// let (lat, lon) = jgd::from_jgd2000(35.0, 135.0).to_jgd2011().into();
-/// ```
-pub fn from_jgd2000(lat: f64, lon: f64) -> Jgd2000 {
-    Jgd2000::new(LatLon::new(lat, lon))
-}
-
-/// [`Jgd2011`] から変換する。
-/// Transform from a coordinate in JGD2011.
-fn _from_jgd2011(lat: f64, lon: f64) -> Jgd2011 {
-    Jgd2011::new(LatLon::new(lat, lon))
-}
-
 /// 旧日本測地系。Tokyo Datum, The older Japanese Datum.
 ///
 /// EPSG: 4301
