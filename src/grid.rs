@@ -5,7 +5,7 @@ use crate::{
 
 /// 日本測地系から世界測地系への座標変換パラメータ。
 ///
-/// たとえ陸地であっても、無人島や、後年に埋め立てられた沿岸部などで、パラメータグリッドが存在しない。
+/// たとえ陸地であっても、無人島や、後年に埋め立てられた沿岸部などには、パラメータが存在しない。
 ///
 /// 出典: 国土地理院 [TKY2JGD.par](https://www.gsi.go.jp/sokuchikijun/tky2jgd_download.html) (Ver.2.1.2, 2003年公開) をもとに形式を変換して作成。
 #[cfg(feature = "tky2jgd")]
@@ -13,13 +13,12 @@ pub const TKY2JGD: Grid = crate::par::TKY2JGD.to_grid();
 
 /// 平成23年(2011年)東北地方太平洋沖地震の座標補正パラメータ。
 ///
-/// 3月11日以降に複雑な地殻変動をともなう地震の発生した地域では、パラメータが存在しない。
+/// 3月11日以降の地震で複雑な地殻変動が生じた地域には、パラメータが存在しない。
 ///
 /// 出典: 国土地理院 [touhokutaiheiyouoki2011.par](https://www.gsi.go.jp/sokuchikijun/sokuchikijun41012.html) (Ver.4.0.0, 2017年公開) をもとに形式を変換して作成。
 #[cfg(feature = "patchjgd")]
 pub const TOUHOKUTAIHEIYOUOKI2011: Grid = crate::par::TOUHOKUTAIHEIYOUOKI2011.to_grid();
 
-/// パラメータグリッド。
 /// Parameters grid.
 pub struct Grid<'a> {
     dots: &'a [Dot],
@@ -30,14 +29,23 @@ impl<'a> Grid<'a> {
         Self { dots }
     }
 
-    /// バイリニア補間。
-    /// Bilinear interpolation.
+    /// Get a shift parameter for coordinate in degrees with bilinear interpolation.
     ///
-    /// 指定された座標が属する3次メッシュの四隅すべてのパラメータがグリッド内に存在しなければならない。
-    /// 一つでも欠けていた場合は `None` を返す。
-    pub fn bilinear(&self, p: LatLon) -> Option<LatLon> {
+    /// Every parameters at four corners of the mesh that `coord` belongs must exist in the `Grid`.
+    /// Otherwise `None` is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use jgd::{LatLon, TKY2JGD};
+    ///
+    /// let coord = LatLon(35.0, 135.0);
+    /// let shift = TKY2JGD.bilinear(coord);
+    /// # assert!(shift.is_some());
+    /// ```
+    pub fn bilinear(&self, degrees: LatLon) -> Option<LatLon> {
         // > 地域毎の変換パラメータの格子点は, 3 次メッシュの中央ではなく, 南西隅に対応する (飛田, 2001)
-        let mesh = Mesh3::floor(p);
+        let mesh = Mesh3::floor(degrees);
         let i = self.search_after(0, mesh)?;
         let sw_shift = self.dots[i].shift;
 
@@ -50,8 +58,8 @@ impl<'a> Grid<'a> {
         let i = self.search_at(i + 1, mesh.north().east())?;
         let ne_shift = self.dots[i].shift;
 
-        let LatLon(n_weight, e_weight) = mesh.diagonal_weight(p);
-        let LatLon(s_weight, w_weight) = mesh.north().east().diagonal_weight(p);
+        let LatLon(n_weight, e_weight) = mesh.diagonal_weight(degrees);
+        let LatLon(s_weight, w_weight) = mesh.north().east().diagonal_weight(degrees);
 
         // weighted mean
         let shift = sw_shift.to_degree() * s_weight * w_weight
@@ -74,8 +82,9 @@ impl<'a> Grid<'a> {
         (self.dots.get(index)?.mesh == query).then_some(index)
     }
 
-    /// 最近傍補間。
     /// Nearest-neighbor interpolation.
+    ///
+    /// 最近傍補間。
     fn _nearest(&self, _degrees: LatLon, _limit: f64) -> LatLon {
         todo!()
     }
@@ -88,9 +97,9 @@ pub struct Dot {
     shift: MicroSecond,
 }
 
+/// Serial number of Japanese MESH3 grids starting from 0 degree.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
-/// Serial number of Japanese MESH3 grids starting from 0 degree.
 struct Mesh3 {
     lat: i16,
     lon: i16,
@@ -100,11 +109,11 @@ impl Mesh3 {
     const LON_SEC: f64 = 45.;
 
     /// Evaluate the southwest of the mesh containing `p`.
-    fn floor(degree: LatLon) -> Self {
+    fn floor(degrees: LatLon) -> Self {
         // "saturating cast" since Rust 1.45.0
         // https://blog.rust-lang.org/2020/07/16/Rust-1.45.0.html#fixing-unsoundness-in-casts
-        let lat = (degree.lat() * 120.) as i16;
-        let lon = (degree.lon() * 80.) as i16;
+        let lat = (degrees.lat() * 120.) as i16;
+        let lon = (degrees.lon() * 80.) as i16;
         Self { lat, lon }
     }
     fn diagonal_weight(self, p: LatLon) -> LatLon {
@@ -128,6 +137,7 @@ impl Mesh3 {
     }
 }
 
+/// Shift amount in microseconds.
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct MicroSecond {
@@ -214,5 +224,19 @@ mod tests {
         let ret = sut.bilinear(LatLon(10., 15.) / SECS).unwrap();
         assert_ulps_eq!(exp.lat(), ret.lat());
         assert_ulps_eq!(exp.lon(), ret.lon());
+    }
+
+    #[test]
+    fn interpolate_out_of_grid() {
+        let sut = Grid::new(&SMALLEST);
+        let ret = sut.bilinear(LatLon(30.001, 45.001) / SECS);
+        assert_eq!(ret, None);
+    }
+
+    #[test]
+    fn interpolate_almost_out_of_grid() {
+        let sut = Grid::new(&SMALLEST);
+        let ret = sut.bilinear(LatLon(29.999, 44.999) / SECS);
+        assert_ne!(ret, None);
     }
 }

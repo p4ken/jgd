@@ -6,10 +6,35 @@ pub(crate) const SECS: f64 = MINUTES * 60.;
 pub(crate) const MILLI_SECS: f64 = 3_600_000.;
 pub(crate) const MICRO_SECS: f64 = MILLI_SECS * 1_000.;
 
-/// 緯度経度。
 /// Latitude and longitude of a coordinate.
+///
+/// 緯度と経度のペア。
+///
+/// # Examples
+///
+/// ```
+/// use jgd::LatLon;
+///
+/// let degrees = LatLon(35.0, 135.0);
+/// ```
+///
+/// Convert from [`Dms`] to degrees:
+///
+/// ```
+/// use jgd::{Dms, LatLon};
+///
+/// let dms = LatLon(Dms(35, 0, 0.0), Dms(135, 0, 0.0));
+/// let degrees = dms.to_degrees();
+/// # assert_eq!(degrees.lat(), 35.);
+/// # assert_eq!(degrees.lon(), 135.);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct LatLon<T = f64>(pub T, pub T);
+pub struct LatLon<T = f64>(
+    /// Latitude.
+    pub T,
+    /// Longitude.
+    pub T,
+);
 impl<T> LatLon<T> {
     /// Returns latitude.
     pub fn lat(self) -> T {
@@ -22,6 +47,29 @@ impl<T> LatLon<T> {
     }
 
     /// Returns self with function `f` applied to both lat and lon.
+    ///
+    /// # Examples
+    ///
+    /// Convert from seconds to degrees:
+    ///
+    /// ```
+    /// use jgd::LatLon;
+    ///
+    /// let seconds = LatLon(126000, 486000);
+    /// let degrees = seconds.map(|x| f64::from(x) / 3_600.);
+    /// # assert_eq!(degrees.lat(), 35.);
+    /// # assert_eq!(degrees.lon(), 135.);
+    /// ```
+    ///
+    /// Convert from degrees to seconds:
+    /// ```
+    /// use jgd::LatLon;
+    ///
+    /// let degrees = LatLon::new(35.0, 135.0);
+    /// let seconds = degrees.map(|x| (x * 3_600.).round() as i32);
+    /// # assert_eq!(seconds.lat(), 126000);
+    /// # assert_eq!(seconds.lon(), 486000);
+    /// ```
     pub fn map<U>(self, f: impl Fn(T) -> U) -> LatLon<U> {
         let [lat, lon] = self.as_array().map(f);
         LatLon(lat, lon)
@@ -31,17 +79,34 @@ impl<T> LatLon<T> {
         [self.0, self.1]
     }
 }
-impl LatLon {
-    /// コンストラクタ。
+impl LatLon<f64> {
     /// Constructs with latitude and longitude.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use jgd::LatLon;
+    ///
+    /// let degrees = LatLon::new(35.0, 135.0);
+    /// ```
     pub fn new(lat: f64, lon: f64) -> Self {
         Self(lat.into(), lon.into())
     }
 
-    /// 度分秒に変換する。
-    /// Converts to degrees, minutes, seconds.
-    pub fn to_dms(&self) -> (Dms, Dms) {
-        [self.lat(), self.lon()].map(Dms::from_degrees).into()
+    /// Converts from degrees to [`Dms`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use jgd::LatLon;
+    /// #
+    /// # let degrees = LatLon(35.0, 135.0);
+    /// let LatLon(lat, lon) = degrees.to_dms();
+    /// # assert_eq!(lat, jgd::Dms(35, 0, 0.0));
+    /// # assert_eq!(lon, jgd::Dms(135, 0, 0.0));
+    /// ```
+    pub fn to_dms(&self) -> LatLon<Dms> {
+        self.map(Dms::from_degrees)
     }
 }
 impl LatLon<Dms> {
@@ -50,14 +115,15 @@ impl LatLon<Dms> {
     ///
     /// # Examples
     ///
-    /// 東経 139°44'28.8869" 北緯 35°39'29.1572" (日本緯経度原点)
-    ///
     /// ```
     /// use jgd::{Dms, LatLon};
     ///
-    /// let degrees = LatLon(Dms(35, 39, 29.1572), Dms(139, 44, 28.8869)).to_degrees();
+    /// let dms = LatLon(Dms(35, 0, 0.0), Dms(135, 0, 0.0));
+    /// let degrees = dms.to_degrees();
+    /// # assert_eq!(degrees.lat(), 35.0);
+    /// # assert_eq!(degrees.lon(), 135.0);
     /// ```
-    pub fn to_degrees(self) -> LatLon {
+    pub fn to_degrees(self) -> LatLon<f64> {
         self.map(Dms::to_degrees)
     }
 }
@@ -90,14 +156,21 @@ impl Div<f64> for LatLon {
     }
 }
 
+/// Degrees, minutes and seconds.
+///
 /// 度分秒。
-/// A tuple of degrees, minutes and seconds.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Dms(pub i32, pub i32, pub f64);
+pub struct Dms(
+    /// Degrees.
+    pub i32,
+    /// Minutes.
+    pub i32,
+    /// Seconds.
+    pub f64,
+);
 impl Dms {
     /// Constructs with degrees, minutes and seconds.
     pub fn new(d: i32, m: i32, s: f64) -> Self {
-        // It's not const fn because s may be Into<f64> in the future.
         Self(d, m, s)
     }
 
@@ -131,8 +204,9 @@ impl Dms {
     }
 }
 
-/// 三次元直交座標。
 /// Earth-centered, Earth-fixed coordinate.
+///
+/// 三次元直交座標。
 #[derive(Debug, Clone, Copy)]
 pub struct ECEF {
     x: f64,

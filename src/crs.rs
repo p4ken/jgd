@@ -10,17 +10,16 @@ use crate::TKY2JGD;
 #[cfg(feature = "patchjgd")]
 use crate::TOUHOKUTAIHEIYOUOKI2011;
 
-/// 旧日本測地系。Tokyo Datum, The older Japanese Datum.
+/// Tokyo Datum, The older Japanese Datum.
+///
+/// 旧日本測地系。
 ///
 /// EPSG: 4301
 pub struct Tokyo {
     degrees: LatLon,
 }
 impl Tokyo {
-    /// 度単位の緯度経度で [`Tokyo`] を構築する。
     /// Constructs a [`Tokyo`] with a coordinate in degrees.
-    ///
-    /// 座標系変換のエントリーポイント。他の座標系に変換できる。
     ///
     /// # Examples
     ///
@@ -33,17 +32,23 @@ impl Tokyo {
         Self { degrees }
     }
 
-    /// [`TKY2JGD`] を用いて [`Jgd2000`] へ変換する。
-    /// Transform to JGD2000.
+    /// Transforms to [`Jgd2000`].
     ///
-    /// # Limitations
+    /// [`TKY2JGD`] を用いて変換する。精度は、一定の条件下で
+    /// 「緯度, 経度の標準偏差はそれぞれ9cm, 8cm」[(飛田, 2001)](crate#references)。
     ///
-    /// 日本国内の地表面の座標のみに使用できる。地中や空中ではズレが大きくなる。
+    /// ただし、[`TKY2JGD`] の範囲外では [`Tokyo97`] を経由して数式によって変換され、精度が大きく下がる。
     ///
-    /// パラメータグリッドの範囲外の座標は、[`Tokyo97`] を経由し、一律の数式による変換にフォールバックされる。
-    /// 複数の座標で表される形状が、パラメータグリッドの範囲内外をまたがっていると、変換後の形状が大きく変わる可能性がある。
+    /// 日本国内の地表面の座標のみに使用可能。地中や空中ではズレが大きくなる。
     ///
-    /// 国土地理院によるオリジナルの実装の精度は、一定条件下で「緯度, 経度の標準偏差はそれぞれ9cm, 8cm」[(飛田, 2001)](crate#references) とされている。
+    /// # Examples
+    ///
+    /// ```
+    /// # use jgd::{Tokyo, LatLon};
+    /// #
+    /// # let tokyo = Tokyo::new(LatLon(35.0, 135.0));
+    /// let LatLon(lat, lon) = tokyo.to_jgd2000().degrees();
+    /// ```
     #[cfg(feature = "tky2jgd")]
     pub fn to_jgd2000(&self) -> Jgd2000 {
         match TKY2JGD.bilinear(self.degrees) {
@@ -59,23 +64,34 @@ impl Tokyo {
         Tokyo97::new(self.degrees)
     }
 
-    /// Returnes a coordinate in degrees.
+    /// Returnes coordinate in degrees.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jgd::{Tokyo, LatLon};
+    /// #
+    /// # let tokyo = Tokyo::new(LatLon(35.0, 135.0));
+    /// let LatLon(lat, lon) = tokyo.degrees();
+    /// ```
     pub fn degrees(&self) -> LatLon {
         self.degrees
     }
 }
 
-/// 旧日本測地系。Tokyo 97, The older Japanese Datum.
+/// Tokyo 97, The older Japanese Datum.
 ///
 /// 世界測地系を基準に、3パラメータによる変換式で定義された測地系 [(飛田, 1997)](crate#references)。
 ///
-/// 旧日本測地系で測量された座標を世界測地系へ変換するには [`Tokyo`] の方が高精度となる。
+/// 旧日本測地系で測量された座標を世界測地系へ変換するには [`Tokyo`] の方が適している。
 pub struct Tokyo97 {
     degrees: LatLon,
 }
 impl Tokyo97 {
     const TO_ITRF94: ECEF = ECEF::new(-146.414, 507.337, 680.507);
 
+    /// Constructs a [`Tokyo97`] with a coordinate in degrees.
+    ///
     /// # Examples
     ///
     /// ```
@@ -92,8 +108,10 @@ impl Tokyo97 {
         Self { degrees }
     }
 
-    /// 3パラメータ [(飛田, 2001)](crate#references) を用いて [`Jgd2000`] へ変換する。
-    /// Transform to JGD2000.
+    /// Transforms to [`Jgd2000`].
+    ///
+    /// 3パラメータ [(飛田, 2001)](crate#references) を用いて変換される。
+    /// このパラメータは東京を基準に算出されたもので、北海道や九州のように遠くへ行くほど精度が下がる傾向がある。
     pub fn to_jgd2000(&self) -> Jgd2000 {
         // https://www.gsi.go.jp/LAW/G2000-g2000faq-1.htm
         // > 測地成果2000での経度・緯度は、世界測地系であるITRF94座標系とGRS80の楕円体を使用して表します
@@ -101,15 +119,15 @@ impl Tokyo97 {
         Jgd2000::new(GRS80.to_geodetic(itrf94))
     }
 
-    /// 離島位置の補正量 [(飛田, 2003)](crate#references) を用いて [`Tokyo`] へ逆変換する。
     /// Inverse of [`Tokyo::to_tokyo97`].
+    ///
+    /// 離島位置の補正量 [(飛田, 2003)](crate#references) を用いて [`Tokyo`] へ逆変換する。
     fn _to_tokyo(&self) -> Tokyo {
         // TODO
         Tokyo::new(self.degrees)
     }
 
-    /// 度単位の緯度経度。
-    /// A coordinate in degrees.
+    /// Returnes coordinate in degrees.
     ///
     /// # Examples
     ///
