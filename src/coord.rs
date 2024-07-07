@@ -1,5 +1,11 @@
 use std::ops::{Add, Div, Mul, Sub};
 
+pub(crate) const DEGREES: f64 = 1.;
+pub(crate) const MINUTES: f64 = DEGREES * 60.;
+pub(crate) const SECS: f64 = MINUTES * 60.;
+pub(crate) const MILLI_SECS: f64 = 3_600_000.;
+pub(crate) const MICRO_SECS: f64 = MILLI_SECS * 1_000.;
+
 /// 緯度経度。
 /// Latitude and longitude of a coordinate.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
@@ -30,24 +36,6 @@ impl LatLon {
     /// Constructs with latitude and longitude.
     pub fn new(lat: f64, lon: f64) -> Self {
         Self(lat.into(), lon.into())
-    }
-
-    /// 秒から変換する。
-    /// Converts from seconds.
-    pub fn from_secs<T: Into<f64>>(lat: T, lon: T) -> Self {
-        Self::new(lat.into(), lon.into()) / 3_600.
-    }
-
-    /// ミリ秒から度に変換する。
-    /// Converts from milliseconds.
-    pub fn from_milli_secs<T: Into<f64>>(lat: T, lon: T) -> Self {
-        Self::from_secs(lat, lon) / 1_000.
-    }
-
-    /// マイクロ秒から度に変換する。
-    /// Converts from microseconds.
-    pub fn from_micro_secs<T: Into<f64>>(lat: T, lon: T) -> Self {
-        Self::from_milli_secs(lat, lon) / 1_000.
     }
 
     /// 度分秒に変換する。

@@ -2,27 +2,6 @@ use approx::assert_abs_diff_eq;
 use jgd::{Dms, LatLon};
 
 #[test]
-fn from_s() {
-    let LatLon(lat, lon) = LatLon::from_secs(3_600, 7_200);
-    assert_eq!(lat, 1.0);
-    assert_eq!(lon, 2.0);
-}
-
-#[test]
-fn from_ms() {
-    let LatLon(lat, lon) = LatLon::from_milli_secs(3_600_000, 7_200_000);
-    assert_eq!(lat, 1.0);
-    assert_eq!(lon, 2.0);
-}
-
-#[test]
-fn from_us() {
-    let LatLon(lat, lon) = LatLon::from_micro_secs(3_600_000_000., 7_200_000_000.);
-    assert_eq!(lat, 1.0);
-    assert_eq!(lon, 2.0);
-}
-
-#[test]
 fn from_dms() {
     let LatLon(lat, lon) = LatLon(Dms(1, 6, 36.), Dms(2, 30, 0.)).to_degrees();
     assert_eq!(lat, 1.11);

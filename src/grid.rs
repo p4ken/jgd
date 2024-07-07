@@ -1,4 +1,7 @@
-use crate::LatLon;
+use crate::{
+    coord::{MICRO_SECS, SECS},
+    LatLon,
+};
 
 /// 日本測地系から世界測地系への座標変換パラメータ。
 ///
@@ -33,7 +36,7 @@ impl<'a> Grid<'a> {
     /// 指定された座標が属する3次メッシュの四隅すべてのパラメータがグリッド内に存在しなければならない。
     /// 一つでも欠けていた場合は `None` を返す。
     pub fn bilinear(&self, p: LatLon) -> Option<LatLon> {
-        // > 地域毎の変換パラメータの格子点は，3 次メッシュの中央ではなく，南西隅に対応する (飛田, 2001)
+        // > 地域毎の変換パラメータの格子点は, 3 次メッシュの中央ではなく, 南西隅に対応する (飛田, 2001)
         let mesh = Mesh3::floor(p);
         let i = self.search_after(0, mesh)?;
         let sw_shift = self.dots[i].shift;
@@ -105,10 +108,10 @@ impl Mesh3 {
         Self { lat, lon }
     }
     fn diagonal_weight(self, p: LatLon) -> LatLon {
-        let min_degree = self.to_degree();
-        let weight_lat = (p.lat() - min_degree.lat()).abs() * 3_600. / Self::LAT_SEC;
-        let weight_lon = (p.lon() - min_degree.lon()).abs() * 3_600. / Self::LON_SEC;
-        LatLon::new(weight_lat, weight_lon)
+        let diff_secs = (p - self.to_degree()).map(|x| x.abs() * SECS);
+        let weight_lat = diff_secs.lat() / Self::LAT_SEC;
+        let weight_lon = diff_secs.lon() / Self::LON_SEC;
+        LatLon(weight_lat, weight_lon)
     }
     fn north(mut self) -> Self {
         self.lat += 1;
@@ -121,7 +124,7 @@ impl Mesh3 {
     fn to_degree(self) -> LatLon {
         let lat = f64::from(self.lat) * Self::LAT_SEC;
         let lon = f64::from(self.lon) * Self::LON_SEC;
-        LatLon::from_secs(lat, lon)
+        LatLon(lat, lon) / SECS
     }
 }
 
@@ -133,9 +136,7 @@ pub struct MicroSecond {
 }
 impl MicroSecond {
     fn to_degree(self) -> LatLon {
-        let lat = f64::from(self.lat) / 3_600_000_000.;
-        let lon = f64::from(self.lon) / 3_600_000_000.;
-        LatLon::new(lat, lon)
+        LatLon(self.lat, self.lon).map(f64::from) / MICRO_SECS
     }
 }
 
@@ -143,11 +144,18 @@ impl MicroSecond {
 mod tests {
     use approx::assert_ulps_eq;
 
-    use super::*;
+    use crate::{
+        coord::{MICRO_SECS, SECS},
+        Grid, LatLon,
+    };
+
+    use super::{Dot, Mesh3, MicroSecond};
 
     #[cfg(feature = "tky2jgd")]
     #[test]
-    fn tky2jgd() {
+    fn tky2jgd_dots() {
+        use super::TKY2JGD;
+
         let records = TKY2JGD.dots;
         assert_eq!(records.len(), 392323);
 
@@ -156,6 +164,16 @@ mod tests {
         assert_eq!(r.mesh.lon, 11356);
         assert_eq!(r.shift.lat, 7875320);
         assert_eq!(r.shift.lon, -13995610);
+    }
+
+    #[test]
+    fn micro_second() {
+        let deg = MicroSecond {
+            lat: 3600,
+            lon: 7200,
+        }
+        .to_degree();
+        assert_eq!(deg, LatLon(0.000_001, 0.000_002));
     }
 
     //         45"
@@ -186,14 +204,14 @@ mod tests {
         let sut = Grid::new(&SMALLEST);
         let ret = sut.bilinear(LatLon::new(0.0, 0.0)).unwrap();
         assert_eq!(ret.lon(), 0.0);
-        assert_eq!(ret.lat(), -6. / 3_600_000_000.);
+        assert_eq!(ret.lat(), -6. / MICRO_SECS);
     }
 
     #[test]
     fn interpolate_middle() {
         let sut = Grid::new(&SMALLEST);
-        let exp = LatLon::from_micro_secs(-2, 2);
-        let ret = sut.bilinear(LatLon::from_secs(10., 15.)).unwrap();
+        let exp = LatLon(-2., 2.) / MICRO_SECS;
+        let ret = sut.bilinear(LatLon(10., 15.) / SECS).unwrap();
         assert_ulps_eq!(exp.lat(), ret.lat());
         assert_ulps_eq!(exp.lon(), ret.lon());
     }
