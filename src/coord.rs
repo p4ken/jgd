@@ -99,7 +99,7 @@ impl From<LatLon> for (f64, f64) {
 
 /// 度分秒。
 /// Degrees, minutes, seconds.
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub struct Dms {
     /// 度。
     /// Degrees.

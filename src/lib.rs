@@ -13,10 +13,10 @@
 //! ```
 //! use jgd::{LatLon, Tokyo};
 //!
-//! let (lat, lon) = Tokyo::new(LatLon(35.0, 135.0))
+//! let LatLon(lat, lon) = Tokyo::new(LatLon(35.0, 135.0))
 //!     .to_jgd2000()
 //!     .to_jgd2011()
-//!     .into();
+//!     .degrees();
 //! ```
 //!
 //! <br>
@@ -24,16 +24,13 @@
 //! [`geo`](https://docs.rs/geo/latest/geo/index.html#types) の形状を測地系変換する。
 //!
 //! ```
-//! use jgd::{LatLon, Tokyo};
 //! use geo::{Coord, LineString, MapCoords};
+//! use jgd::{LatLon, Tokyo};
 //!
 //! let tokyo_datum = LineString::from(vec![(135.0, 35.0), (135.1, 35.1)]);
 //! let jgd2011 = tokyo_datum.map_coords(|Coord { x, y }| {
 //!     // 順序に注意: lat, lon <=> y, x
-//!     let (y, x) = Tokyo::new(LatLon(y, x))
-//!         .to_jgd2000()
-//!         .to_jgd2011()
-//!         .into();
+//!     let LatLon(y, x) = Tokyo::new(LatLon(y, x)).to_jgd2000().to_jgd2011().degrees();
 //!     Coord { x, y }
 //! });
 //! ```
