@@ -8,8 +8,6 @@ pub(crate) const MICRO_SECS: f64 = MILLI_SECS * 1_000.;
 
 /// Latitude and longitude of a coordinate.
 ///
-/// 緯度と経度のペア。
-///
 /// # Examples
 ///
 /// ```
@@ -62,6 +60,7 @@ impl<T> LatLon<T> {
     /// ```
     ///
     /// Convert from degrees to seconds:
+    ///
     /// ```
     /// use jgd::LatLon;
     ///
@@ -110,7 +109,6 @@ impl LatLon<f64> {
     }
 }
 impl LatLon<Dms> {
-    /// 度分秒から度に変換する。
     /// Converts from [`Dms`] to degrees.
     ///
     /// # Examples
@@ -156,9 +154,7 @@ impl Div<f64> for LatLon {
     }
 }
 
-/// Degrees, minutes and seconds.
-///
-/// 度分秒。
+/// Degrees minutes seconds.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct Dms(
     /// Degrees.
@@ -205,8 +201,6 @@ impl Dms {
 }
 
 /// Earth-centered, Earth-fixed coordinate.
-///
-/// 三次元直交座標。
 #[derive(Debug, Clone, Copy)]
 pub struct ECEF {
     x: f64,
