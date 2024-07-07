@@ -4,25 +4,27 @@ use std::ops::{Add, Div, Mul, Sub};
 /// Latitude and longitude of a coordinate.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct LatLon<T = f64>(pub T, pub T);
+impl<T> LatLon<T> {
+    pub fn lat(self) -> T {
+        self.0
+    }
+
+    pub fn lon(self) -> T {
+        self.1
+    }
+
+    pub fn map<U>(self, f: impl Fn(T) -> U) -> LatLon<U> {
+        let [lat, lon] = self.as_array().map(f);
+        LatLon(lat, lon)
+    }
+
+    fn as_array(self) -> [T; 2] {
+        [self.0, self.1]
+    }
+}
 impl LatLon {
     pub(crate) fn new<T: Into<f64>>(lat: T, lon: T) -> Self {
         Self(lat.into(), lon.into())
-    }
-
-    /// 度分秒から変換する。
-    /// Converts from degrees, minutes, seconds.
-    ///
-    /// # Examples
-    ///
-    /// 東経 139°44′28.8869” 北緯 35°39′29.1572” (日本緯経度原点)
-    ///
-    /// ```
-    /// use jgd::LatLon;
-    ///
-    /// let origin = LatLon::from_dms((35, 39, 29.1572), (139, 44, 28.8869));
-    /// ```
-    pub fn from_dms<T: Into<Dms>>(lat: T, lon: T) -> Self {
-        Self::new(lat.into().to_degrees(), lon.into().to_degrees())
     }
 
     /// 秒から変換する。
@@ -48,19 +50,22 @@ impl LatLon {
     pub fn to_dms(&self) -> (Dms, Dms) {
         [self.lat(), self.lon()].map(Dms::from_degrees).into()
     }
-
-    pub fn lat(&self) -> f64 {
-        self.0
-    }
-
-    pub fn lon(&self) -> f64 {
-        self.1
-    }
-
-    pub(crate) fn map(mut self, f: impl Fn(f64) -> f64) -> Self {
-        self.0 = f(self.0);
-        self.1 = f(self.1);
-        self
+}
+impl LatLon<Dms> {
+    /// 度分秒から度に変換する。
+    /// Converts from [`Dms`] to degrees.
+    ///
+    /// # Examples
+    ///
+    /// 東経 139°44'28.8869" 北緯 35°39'29.1572" (日本緯経度原点)
+    ///
+    /// ```
+    /// use jgd::{Dms, LatLon};
+    ///
+    /// let degrees = LatLon(Dms(35, 39, 29.1572), Dms(139, 44, 28.8869)).to_degrees();
+    /// ```
+    pub fn to_degrees(self) -> LatLon {
+        self.map(Dms::to_degrees)
     }
 }
 impl Add<LatLon> for LatLon {
@@ -94,47 +99,35 @@ impl Div<f64> for LatLon {
 
 /// 度分秒。
 /// Degrees, minutes, seconds.
-#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
-pub struct Dms {
-    /// 度。
-    /// Degrees.
-    pub d: i32,
-
-    /// 分。
-    /// Minutes.
-    pub m: i32,
-
-    /// 秒。
-    /// Seconds.
-    pub s: f64,
-}
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
+pub struct Dms(pub i32, pub i32, pub f64);
 impl Dms {
-    fn new<D: Into<i32>, M: Into<i32>, S: Into<f64>>(d: D, m: M, s: S) -> Self {
-        let d = d.into();
-        let m = m.into();
-        let s = s.into();
-        Self { d, m, s }
+    // fn new<D: Into<i32>, M: Into<i32>, S: Into<f64>>(d: D, m: M, s: S) -> Self {
+    //     let d = d.into();
+    //     let m = m.into();
+    //     let s = s.into();
+    //     Self { d, m, s }
+    // }
+    pub fn d(self) -> i32 {
+        self.0
+    }
+    pub fn m(self) -> i32 {
+        self.1
+    }
+    pub fn s(self) -> f64 {
+        self.2
     }
     fn from_degrees(deg: f64) -> Self {
         let d = deg as i32;
         let m = (deg * 60. % 60.) as i32;
         let s = (deg * 3600.) % 60.;
-        Self::new(d, m, s)
+        Self(d, m, s)
     }
-    fn to_degrees(&self) -> f64 {
-        f64::from(self.d) + f64::from(self.m) / 60. + self.s / 3_600.
-    }
-}
-impl<D: Into<i32>, M: Into<i32>, S: Into<f64>> From<(D, M, S)> for Dms {
-    fn from((d, m, s): (D, M, S)) -> Self {
-        Self::new(d, m, s)
+    fn to_degrees(self) -> f64 {
+        let Self(d, m, s) = self;
+        f64::from(d) + f64::from(m) / 60. + s / 3_600.
     }
 }
-// impl From<Dms> for (i32, i32, f64) {
-//     fn from(Dms { d, m, s }: Dms) -> Self {
-//         (d, m, s)
-//     }
-// }
 
 /// 三次元直交座標。
 /// Earth-centered, Earth-fixed coordinate.

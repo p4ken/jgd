@@ -73,7 +73,7 @@ mod island;
 #[cfg(any(feature = "tky2jgd", feature = "patchjgd"))]
 mod par;
 
-pub use coord::LatLon;
+pub use coord::{Dms, LatLon};
 pub use crs::{Jgd2000, Jgd2011, Tokyo, Tokyo97};
 pub use grid::Grid;
 #[cfg(feature = "tky2jgd")]

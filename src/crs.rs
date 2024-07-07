@@ -17,16 +17,17 @@ pub struct Tokyo {
     degrees: LatLon,
 }
 impl Tokyo {
-    /// [`Tokyo`] から変換する。
-    /// Transform from a coordinate in Tokyo Datum.
+    /// 度単位の緯度経度で [`Tokyo`] を構築する。
+    /// Constructs a [`Tokyo`] with a coordinate in degrees.
+    ///
+    /// 座標系変換のエントリーポイント。他の座標系に変換できる。
     ///
     /// # Examples
     ///
     /// ```
-    /// use jgd::{LatLon, Tokyo};
-    ///
-    /// let tokyo = LatLon::from_dms((35, 0, 0.0), (135, 0, 0.0));
-    /// let jgd2000 = Tokyo::new(tokyo).to_jgd2000().degrees();
+    /// # use jgd::{LatLon, Tokyo};
+    /// #
+    /// let jgd2000 = Tokyo::new(LatLon(35.0, 135.0)).to_jgd2000().degrees();
     /// ```
     pub fn new(degrees: LatLon) -> Self {
         Self { degrees }
@@ -58,8 +59,7 @@ impl Tokyo {
         Tokyo97::new(self.degrees)
     }
 
-    /// 緯度経度。
-    /// Latitude and longitude.
+    /// Returnes a coordinate in degrees.
     pub fn degrees(&self) -> LatLon {
         self.degrees
     }
@@ -76,17 +76,19 @@ pub struct Tokyo97 {
 impl Tokyo97 {
     const TO_ITRF94: ECEF = ECEF::new(-146.414, 507.337, 680.507);
 
-    /// [`Tokyo97`] から変換する。
-    /// Entry point to transform a coordinate from Tokyo97 to other.
-    ///
     /// # Examples
     ///
     /// ```
-    /// use jgd::{LatLon, Tokyo97};
-    ///
+    /// # use jgd::{LatLon, Tokyo97};
+    /// #
     /// let jgd2000 = Tokyo97::new(LatLon(35.0, 135.0)).to_jgd2000().degrees();
     /// ```
     pub fn new(degrees: LatLon) -> Self {
+        // TODO: 度単位の範囲チェック
+        //
+        // # Panics
+        //
+        // 緯度経度が度単位の範囲外だった場合、デバッグビルドでパニックする。
         Self { degrees }
     }
 
@@ -107,7 +109,7 @@ impl Tokyo97 {
     }
 
     /// 度単位の緯度経度。
-    /// Latitude and longitude in degrees.
+    /// A coordinate in degrees.
     ///
     /// # Examples
     ///
@@ -129,16 +131,12 @@ pub struct Jgd2000 {
     degrees: LatLon,
 }
 impl Jgd2000 {
-    /// [`Jgd2000`] から変換する。
-    /// Transform from a coordinate in JGD2000.
-    ///
     /// # Examples
     ///
     /// ```
     /// use jgd::{Jgd2000, LatLon};
     ///
-    /// let jgd2000 = LatLon::from_dms((35, 0, 0.0), (135, 0, 0.0));
-    /// let jgd2011 = Jgd2000::new(jgd2000).to_jgd2011().degrees();
+    /// let jgd2011 = Jgd2000::new(LatLon(35.0, 135.0)).to_jgd2011().degrees();
     /// ```
     pub fn new(degrees: LatLon) -> Self {
         Self { degrees }
