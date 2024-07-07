@@ -24,7 +24,7 @@ pub struct Ellipsoid {
 impl Ellipsoid {
     /// 三次元直交座標に変換する。
     pub fn to_ecef(&self, degree: LatLon) -> ECEF {
-        let (lat, lon) = degree.map(f64::to_radians).into();
+        let LatLon(lat, lon) = degree.map(f64::to_radians);
         let geoid = self.equatorial_radius
             / (1.0 - self.equatorial_eccentricity() * lat.sin().powi(2)).sqrt();
         ECEF::new(

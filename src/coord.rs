@@ -91,11 +91,6 @@ impl Div<f64> for LatLon {
         self.map(|x| x / rhs)
     }
 }
-impl From<LatLon> for (f64, f64) {
-    fn from(degree: LatLon) -> Self {
-        (degree.lat(), degree.lon())
-    }
-}
 
 /// 度分秒。
 /// Degrees, minutes, seconds.

@@ -47,8 +47,8 @@ impl<'a> Grid<'a> {
         let i = self.search_at(i + 1, mesh.north().east())?;
         let ne_shift = self.dots[i].shift;
 
-        let (n_weight, e_weight) = mesh.diagonal_weight(p).into();
-        let (s_weight, w_weight) = mesh.north().east().diagonal_weight(p).into();
+        let LatLon(n_weight, e_weight) = mesh.diagonal_weight(p);
+        let LatLon(s_weight, w_weight) = mesh.north().east().diagonal_weight(p);
 
         // weighted mean
         let shift = sw_shift.to_degree() * s_weight * w_weight
