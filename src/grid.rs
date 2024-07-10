@@ -212,7 +212,7 @@ mod tests {
     #[test]
     fn interpolate_corner() {
         let sut = Grid::new(&SMALLEST);
-        let ret = sut.bilinear(LatLon::new(0.0, 0.0)).unwrap();
+        let ret = sut.bilinear(LatLon(0.0, 0.0)).unwrap();
         assert_eq!(ret.lon(), 0.0);
         assert_eq!(ret.lat(), -6. / MICRO_SECS);
     }

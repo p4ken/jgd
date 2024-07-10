@@ -62,36 +62,20 @@ impl<T> LatLon<T> {
     /// Convert from degrees to seconds:
     ///
     /// ```
-    /// use jgd::LatLon;
-    ///
-    /// let degrees = LatLon::new(35.0, 135.0);
+    /// # use jgd::{LatLon, Tokyo};
+    /// #
+    /// # let degrees = LatLon::<f64>(35.0, 135.0);
     /// let seconds = degrees.map(|x| (x * 3_600.).round() as i32);
     /// # assert_eq!(seconds.lat(), 126000);
     /// # assert_eq!(seconds.lon(), 486000);
     /// ```
     pub fn map<U>(self, f: impl Fn(T) -> U) -> LatLon<U> {
-        let [lat, lon] = self.as_array().map(f);
+        let lat = f(self.0);
+        let lon = f(self.1);
         LatLon(lat, lon)
-    }
-
-    fn as_array(self) -> [T; 2] {
-        [self.0, self.1]
     }
 }
 impl LatLon<f64> {
-    /// Constructs with latitude and longitude.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use jgd::LatLon;
-    ///
-    /// let degrees = LatLon::new(35.0, 135.0);
-    /// ```
-    pub fn new(lat: f64, lon: f64) -> Self {
-        Self(lat.into(), lon.into())
-    }
-
     /// Converts from degrees to [`Dms`].
     ///
     /// # Examples
@@ -155,6 +139,13 @@ impl Div<f64> for LatLon {
 }
 
 /// Degrees minutes seconds.
+///
+/// # Examples
+///
+/// ```
+/// # use jgd::Dms;
+/// let lat = Dms(35, 0, 0.0);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct Dms(
     /// Degrees.
@@ -165,11 +156,6 @@ pub struct Dms(
     pub f64,
 );
 impl Dms {
-    /// Constructs with degrees, minutes and seconds.
-    pub fn new(d: i32, m: i32, s: f64) -> Self {
-        Self(d, m, s)
-    }
-
     /// Returns degrees.
     pub fn d(self) -> i32 {
         self.0
