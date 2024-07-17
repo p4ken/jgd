@@ -3,10 +3,10 @@ use std::ops::{Add, Div, Mul, Sub};
 pub(crate) const DEGREES: f64 = 1.;
 pub(crate) const MINUTES: f64 = DEGREES * 60.;
 pub(crate) const SECS: f64 = MINUTES * 60.;
-pub(crate) const MILLI_SECS: f64 = 3_600_000.;
+pub(crate) const MILLI_SECS: f64 = SECS * 1_000.;
 pub(crate) const MICRO_SECS: f64 = MILLI_SECS * 1_000.;
 
-/// Latitude and longitude of a coordinate.
+/// A pair of latitude and longitude.
 ///
 /// # Examples
 ///
@@ -82,7 +82,7 @@ impl LatLon<f64> {
     ///
     /// ```
     /// use jgd::LatLon;
-    /// #
+    ///
     /// # let degrees = LatLon(35.0, 135.0);
     /// let LatLon(lat, lon) = degrees.to_dms();
     /// # assert_eq!(lat, jgd::Dms(35, 0, 0.0));

@@ -60,6 +60,7 @@ impl Tokyo {
     /// 離島位置の補正量 [(飛田, 2003)](crate#references) を用いて [`Tokyo97`] へ変換する。
     fn _to_tokyo97(&self) -> Tokyo97 {
         // TODO
+        // https://support.e-map.ne.jp/files/V30/Solitaryisland.pdf
         Tokyo97::new(self.degrees)
     }
 
