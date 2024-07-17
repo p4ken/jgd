@@ -1,17 +1,26 @@
 # jgd
 
-Rust で日本の測地系を変換するライブラリ。
+[![crates.io](https://img.shields.io/crates/v/jgd.svg)](https://crates.io/crates/jgd)
+
+Transform geodetic datums used in Japan.
 
 ## Getting started
 
-[![crates.io](https://img.shields.io/crates/v/jgd.svg)](https://crates.io/crates/jgd)
-
-```shell
+```sh
 cargo add jgd
 ```
 
-## [API documentation](https://docs.rs/jgd/)
+## Examples
 
-[![docs.rs](https://img.shields.io/badge/_-docs.rs-slategray?logo=docsdotrs)](https://docs.rs/jgd/)
+```rs
+use jgd::{LatLon, Tokyo};
+
+let LatLon(lat, lon) = Tokyo::new(LatLon(35.0, 135.0))
+    .to_jgd2000()
+    .to_jgd2011()
+    .degrees();
+```
+
+## [API documentation](https://docs.rs/jgd/)
 
 ## [MIT license](LICENSE.md)
