@@ -1,42 +1,24 @@
 use approx::assert_abs_diff_eq;
-use jgd::LatLon;
+use jgd::{Dms, LatLon};
 
-#[test]
-fn from_s() {
-    let (lat, lon) = LatLon::from_secs(3_600, 7_200).into();
-    assert_eq!(lat, 1.0);
-    assert_eq!(lon, 2.0);
-}
-
-#[test]
-fn from_ms() {
-    let (lat, lon) = LatLon::from_milli_secs(3_600_000, 7_200_000).into();
-    assert_eq!(lat, 1.0);
-    assert_eq!(lon, 2.0);
-}
-
-#[test]
-fn from_us() {
-    let (lat, lon) = LatLon::from_micro_secs(3_600_000_000., 7_200_000_000.).into();
-    assert_eq!(lat, 1.0);
-    assert_eq!(lon, 2.0);
-}
+mod testing;
 
 #[test]
 fn from_dms() {
-    let (lat, lon) = LatLon::from_dms((1, 6, 36), (2, 30, 0)).into();
-    assert_eq!(lat, 1.11);
-    assert_eq!(lon, 2.50);
+    let ret = LatLon(Dms(35, 39, 29.1572), Dms(139, 44, 28.8869)).to_degrees();
+    let expected = LatLon(35.65809922, 139.74135747);
+    testing::assert_distance(ret, expected);
 }
 
 #[test]
 fn to_dms() {
-    let (lat, lon) = LatLon::from_dms((1, 6, 59.99), (2, 30, 0.)).to_dms();
-    assert_eq!(lat.d, 1);
-    assert_eq!(lat.m, 6);
-    assert_abs_diff_eq!(lat.s, 59.99, epsilon = 0.00000001);
+    let LatLon(lat, lon) = LatLon(35.65809922, 139.74135747).to_dms();
 
-    assert_eq!(lon.d, 2);
-    assert_eq!(lon.m, 30);
-    assert_abs_diff_eq!(lon.s, 0., epsilon = 0.00000001);
+    assert_eq!(lat.d(), 35);
+    assert_eq!(lat.m(), 39);
+    assert_abs_diff_eq!(lat.s(), 29.1572, epsilon = 0.00001);
+
+    assert_eq!(lon.d(), 139);
+    assert_eq!(lon.m(), 44);
+    assert_abs_diff_eq!(lon.s(), 28.8869, epsilon = 0.00001);
 }

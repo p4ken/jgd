@@ -24,7 +24,7 @@ pub struct Ellipsoid {
 impl Ellipsoid {
     /// 三次元直交座標に変換する。
     pub fn to_ecef(&self, degree: LatLon) -> ECEF {
-        let (lat, lon) = degree.map(f64::to_radians).into();
+        let LatLon(lat, lon) = degree.map(f64::to_radians);
         let geoid = self.equatorial_radius
             / (1.0 - self.equatorial_eccentricity() * lat.sin().powi(2)).sqrt();
         ECEF::new(
@@ -42,7 +42,7 @@ impl Ellipsoid {
             + self.polar_eccentricity() * self.polar_radius * (theta.sin().powi(3)))
         .atan2(p - self.equatorial_eccentricity() * self.equatorial_radius * (theta.cos().powi(3)));
         let lon = ecef.y().atan2(ecef.x());
-        LatLon::new(lat.to_degrees(), lon.to_degrees())
+        LatLon(lat, lon).map(f64::to_degrees)
     }
 
     /// 赤道離心率 = (赤道半径^2 - 極半径^2) / 赤道半径^2
