@@ -37,7 +37,7 @@ impl Tokyo {
     /// [`TKY2JGD`] を用いて変換される。精度は、一定の条件下で
     /// 「緯度, 経度の標準偏差はそれぞれ9cm, 8cm」[(飛田, 2001)](crate#references)。
     ///
-    /// ただし、[`TKY2JGD`] の範囲外では [`Tokyo97`] を経由して数式によって変換され、精度が大きく下がる。
+    /// ただし、[`TKY2JGD`] の範囲外では [`Tokyo97::to_jgd2000`] によって変換され、精度が大きく下がる。
     ///
     /// 日本国内の地表面の座標のみに使用可能。地中や空中ではズレが大きくなる。
     ///
@@ -53,16 +53,12 @@ impl Tokyo {
     pub fn to_jgd2000(&self) -> Jgd2000 {
         match TKY2JGD.bilinear(self.degrees) {
             Some(shift) => Jgd2000::new(self.degrees + shift),
-            None => self._to_tokyo97().to_jgd2000(),
+            None => Tokyo97::new(self.degrees).to_jgd2000(),
         }
     }
 
-    /// 離島位置の補正量 [(飛田, 2003)](crate#references) を用いて [`Tokyo97`] へ変換する。
-    fn _to_tokyo97(&self) -> Tokyo97 {
-        // TODO
-        // https://support.e-map.ne.jp/files/V30/Solitaryisland.pdf
-        Tokyo97::new(self.degrees)
-    }
+    /// Transforms to [`Tokyo97`].
+    fn _to_tokyo97(&self) {}
 
     /// Returnes coordinate in degrees.
     ///
@@ -129,12 +125,7 @@ impl Tokyo97 {
     }
 
     /// Inverse of [`Tokyo::to_tokyo97`].
-    ///
-    /// 離島位置の補正量 [(飛田, 2003)](crate#references) を用いて [`Tokyo`] へ逆変換する。
-    fn _to_tokyo(&self) -> Tokyo {
-        // TODO
-        Tokyo::new(self.degrees)
-    }
+    fn _to_tokyo(&self) {}
 
     /// Returnes coordinate in degrees.
     ///
@@ -193,13 +184,13 @@ impl Jgd2000 {
         Jgd2011::new(self.degrees + shift)
     }
 
-    /// [`TKY2JGD`] を用いて [`Tokyo`] へ逆変換する。
     /// Inverse of [`Tokyo::to_jgd2000`].
-    fn _to_tokyo(&self) {}
+    fn _to_tokyo(&self) {
+        // グリッドのキーは日本測地系だが、求めたいのも日本測地系なので、矛盾している。
+        // オリジナルの実装 modTky2jgd.bas:1108 は、精度や対応範囲を割り切っている。
+    }
 
     /// Inverse of [`Tokyo97::to_jgd2000`].
-    ///
-    /// 3パラメータを用いて [`Tokyo97`] へ逆変換する。
     ///
     /// # Examples
     ///
@@ -243,8 +234,12 @@ impl Jgd2011 {
         Self { degrees }
     }
 
-    /// [`TOUHOKUTAIHEIYOUOKI2011`] を用いて [`Jgd2000`] へ逆変換する。
-    fn _to_jgd2000(&self) {}
+    /// Inverse of [`Jgd2000::to_jgd2011`].
+    ///
+    /// [`TOUHOKUTAIHEIYOUOKI2011`] を用いて逆変換される。
+    fn _to_jgd2000(&self) {
+        // Jgd2000::_to_tokyo() と同様の課題あり
+    }
 
     /// Returnes coordinate in degrees.
     ///
@@ -261,10 +256,7 @@ impl Jgd2011 {
     }
 }
 
-// /// 平面直角座標系
-// // https://vldb.gsi.go.jp/sokuchi/surveycalc/surveycalc/algorithm/xy2bl/xy2bl.htm
-// // https://sw1227.hatenablog.com/entry/2018/11/30/200702
-// struct _PlaneRectangular<T>(T);
-
-// /// Webメルカトル座標系
-// struct _WebMercator<T>(T);
+/// 平面直角座標系
+// https://vldb.gsi.go.jp/sokuchi/surveycalc/surveycalc/algorithm/xy2bl/xy2bl.htm
+// https://sw1227.hatenablog.com/entry/2018/11/30/200702
+struct _PlaneRectangular {}

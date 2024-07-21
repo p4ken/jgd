@@ -83,8 +83,6 @@ impl<'a> Grid<'a> {
     }
 
     /// Nearest-neighbor interpolation.
-    ///
-    /// 最近傍補間。
     fn _nearest(&self, _degrees: LatLon, _limit: f64) -> LatLon {
         todo!()
     }
