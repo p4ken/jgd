@@ -10,24 +10,32 @@
 //! ```
 //! use jgd::{LatLon, Tokyo};
 //!
-//! let LatLon(lat, lon) = Tokyo::new(LatLon(35.0, 135.0))
+//! # fn main() -> anyhow::Result<()> {
+//! let LatLon(lat, lon) = Tokyo::new(LatLon(35.0, 135.0))?
 //!     .to_jgd2000()
 //!     .to_jgd2011()
 //!     .degrees();
+//! #   Ok(())
+//! # }
 //! ```
 //!
 //! Transform coordinates of [`geo`](https://docs.rs/geo/latest/geo/index.html#types) crate:
 //!
 //! ```
 //! use geo::{Coord, LineString, MapCoords};
-//! use jgd::{LatLon, Tokyo};
+//! use jgd::{DegreeRangeError, LatLon, Tokyo};
 //!
+//! # fn main() -> anyhow::Result<()> {
 //! let tokyo_datum = LineString::from(vec![(135.0, 35.0), (135.1, 35.1)]);
-//! let jgd2011 = tokyo_datum.map_coords(|Coord { x, y }| {
-//!     // lat, lon <=> y, x
-//!     let LatLon(y, x) = Tokyo::new(LatLon(y, x)).to_jgd2000().to_jgd2011().degrees();
-//!     Coord { x, y }
-//! });
+//! let jgd2011 = tokyo_datum.try_map_coords(|Coord { x, y }| -> Result<_, DegreeRangeError> {
+//!     let LatLon(y, x) = Tokyo::new(LatLon(y, x))?
+//!         .to_jgd2000()
+//!         .to_jgd2011()
+//!         .degrees();
+//!     Ok(Coord { x, y })
+//! })?;
+//! #   Ok(())
+//! # }
 //! ```
 //!
 //! # Features
@@ -70,7 +78,7 @@ mod island;
 #[cfg(any(feature = "tky2jgd", feature = "patchjgd"))]
 mod par;
 
-pub use coord::{Dms, LatLon};
+pub use coord::{DegreeRangeError, Dms, LatLon};
 pub use crs::{Jgd2000, Jgd2011, Tokyo, Tokyo97};
 pub use grid::Grid;
 #[cfg(feature = "tky2jgd")]

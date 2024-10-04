@@ -1,12 +1,15 @@
+use anyhow::Result;
 use jgd::{Jgd2000, LatLon, Tokyo97};
 
 mod testing;
 
 #[test]
-fn towgs84() {
-    let ret = Tokyo97::new(LatLon(35., 135.)).to_jgd2000().degrees();
-    let proj = LatLon(35.00319718, 134.99720425);
-    testing::assert_distance(ret, proj);
+fn towgs84() -> Result<()> {
+    testing::assert_distance(
+        Tokyo97::new(LatLon(35., 135.))?.to_jgd2000().degrees(),
+        LatLon(35.00319718, 134.99720425),
+    );
+    Ok(())
 }
 
 #[test]

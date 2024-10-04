@@ -1,7 +1,7 @@
 use crate::{
     coord::ECEF,
     earth::{BESSEL, GRS80},
-    LatLon,
+    DegreeRangeError, LatLon,
 };
 
 #[cfg(feature = "tky2jgd")]
@@ -26,10 +26,14 @@ impl Tokyo {
     /// ```
     /// # use jgd::{LatLon, Tokyo};
     /// #
-    /// let jgd2011 = Tokyo::new(LatLon(35.0, 135.0)).to_jgd2000().to_jgd2011();
+    /// # fn main() -> anyhow::Result<()> {
+    /// let jgd2011 = Tokyo::new(LatLon(35.0, 135.0))?.to_jgd2000().to_jgd2011();
+    /// #   Ok(())
+    /// # }
     /// ```
-    pub fn new(degrees: LatLon) -> Self {
-        Self { degrees }
+    pub fn new(degrees: LatLon) -> Result<Self, DegreeRangeError> {
+        degrees.validate_degrees()?;
+        Ok(Self { degrees })
     }
 
     /// Transforms to [`Jgd2000`].
@@ -46,14 +50,14 @@ impl Tokyo {
     /// ```
     /// # use jgd::{Tokyo, LatLon};
     /// #
-    /// # let tokyo = Tokyo::new(LatLon(35.0, 135.0));
+    /// # let tokyo = Tokyo::new(LatLon(35.0, 135.0)).unwrap();
     /// let LatLon(lat, lon) = tokyo.to_jgd2000().degrees();
     /// ```
     #[cfg(feature = "tky2jgd")]
     pub fn to_jgd2000(&self) -> Jgd2000 {
         match TKY2JGD.bilinear(self.degrees) {
             Some(shift) => Jgd2000::new(self.degrees + shift),
-            None => Tokyo97::new(self.degrees).to_jgd2000(),
+            None => Tokyo97::new_unchecked(self.degrees).to_jgd2000(),
         }
     }
 
@@ -67,7 +71,7 @@ impl Tokyo {
     /// ```
     /// # use jgd::{Tokyo, LatLon};
     /// #
-    /// # let tokyo = Tokyo::new(LatLon(35.0, 135.0));
+    /// # let tokyo = Tokyo::new(LatLon(35.0, 135.0)).unwrap();
     /// let LatLon(lat, lon) = tokyo.degrees();
     /// ```
     pub fn degrees(&self) -> LatLon {
@@ -93,14 +97,17 @@ impl Tokyo97 {
     /// ```
     /// # use jgd::{LatLon, Tokyo97};
     /// #
-    /// let jgd2000 = Tokyo97::new(LatLon(35.0, 135.0)).to_jgd2000();
+    /// # fn main() -> anyhow::Result<()> {
+    /// let jgd2000 = Tokyo97::new(LatLon(35.0, 135.0))?.to_jgd2000();
+    /// #   Ok(())
+    /// # }
     /// ```
-    pub fn new(degrees: LatLon) -> Self {
-        // TODO: 度単位の範囲チェック
-        //
-        // # Panics
-        //
-        // 緯度経度が度単位の範囲外だった場合、デバッグビルドでパニックする。
+    pub fn new(degrees: LatLon) -> Result<Self, DegreeRangeError> {
+        degrees.validate_degrees()?;
+        Ok(Self { degrees })
+    }
+
+    fn new_unchecked(degrees: LatLon) -> Self {
         Self { degrees }
     }
 
@@ -114,7 +121,7 @@ impl Tokyo97 {
     /// ```
     /// # use jgd::{Tokyo97, LatLon};
     /// #
-    /// # let tokyo97 = Tokyo97::new(LatLon(35.0, 135.0));
+    /// # let tokyo97 = Tokyo97::new(LatLon(35.0, 135.0)).unwrap();
     /// let LatLon(lat, lon) = tokyo97.to_jgd2000().degrees();
     /// ```
     pub fn to_jgd2000(&self) -> Jgd2000 {
@@ -134,7 +141,7 @@ impl Tokyo97 {
     /// ```
     /// # use jgd::{LatLon, Tokyo97};
     /// #
-    /// # let tokyo97 = Tokyo97::new(LatLon(35.0, 135.0));
+    /// # let tokyo97 = Tokyo97::new(LatLon(35.0, 135.0)).unwrap();
     /// let LatLon(lat, lon) = tokyo97.degrees();
     /// ```
     pub fn degrees(&self) -> LatLon {
@@ -160,6 +167,7 @@ impl Jgd2000 {
     /// #
     /// let to_jgd2011 = Jgd2000::new(LatLon(35.0, 135.0)).to_jgd2011();
     pub fn new(degrees: LatLon) -> Self {
+        // TODO: 度単位の範囲チェック
         Self { degrees }
     }
 
@@ -202,7 +210,7 @@ impl Jgd2000 {
     /// ```
     pub fn to_tokyo97(&self) -> Tokyo97 {
         let itrf94 = GRS80.to_ecef(self.degrees) - Tokyo97::TO_ITRF94;
-        Tokyo97::new(BESSEL.to_geodetic(itrf94))
+        Tokyo97::new_unchecked(BESSEL.to_geodetic(itrf94))
     }
 
     /// Returnes coordinate in degrees.
@@ -231,6 +239,7 @@ pub struct Jgd2011 {
 impl Jgd2011 {
     #[allow(dead_code)]
     fn new(degrees: LatLon) -> Self {
+        // TODO: 度単位の範囲チェック
         Self { degrees }
     }
 

@@ -1,4 +1,7 @@
-use std::ops::{Add, Div, Mul, Sub};
+use std::{
+    fmt,
+    ops::{Add, Div, Mul, Sub},
+};
 
 pub(crate) const DEGREES: f64 = 1.;
 pub(crate) const MINUTES: f64 = DEGREES * 60.;
@@ -88,8 +91,16 @@ impl LatLon<f64> {
     /// # assert_eq!(lat, jgd::Dms(35, 0, 0.0));
     /// # assert_eq!(lon, jgd::Dms(135, 0, 0.0));
     /// ```
-    pub fn to_dms(&self) -> LatLon<Dms> {
+    pub fn to_dms(self) -> LatLon<Dms> {
         self.map(Dms::from_degrees)
+    }
+
+    pub(crate) fn validate_degrees(self) -> Result<(), DegreeRangeError> {
+        if self.lat().abs() > 90. || self.lon().abs() > 180. {
+            let possibly_reversed = Self(self.lon(), self.lat()).validate_degrees().is_ok();
+            return Err(DegreeRangeError::new(possibly_reversed));
+        }
+        Ok(())
     }
 }
 impl LatLon<Dms> {
@@ -229,4 +240,36 @@ impl Sub for ECEF {
             z: self.z - rhs.z,
         }
     }
+}
+
+#[derive(Debug)]
+pub struct DegreeRangeError {
+    possibly_reversed: bool,
+}
+
+impl DegreeRangeError {
+    fn new(possibly_reversed: bool) -> Self {
+        Self { possibly_reversed }
+    }
+}
+impl fmt::Display for DegreeRangeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "degrees out of range")?;
+
+        if self.possibly_reversed {
+            write!(f, "; may be lat lon reversed?")?;
+        }
+
+        Ok(())
+    }
+}
+impl std::error::Error for DegreeRangeError {}
+
+#[test]
+fn a() -> anyhow::Result<()> {
+    Err(anyhow::Error::from(DegreeRangeError::new(true)))
+}
+#[test]
+fn b() -> Result<(), DegreeRangeError> {
+    Err(DegreeRangeError::new(true))
 }
