@@ -15,7 +15,7 @@ cargo add jgd
 ```rs
 use jgd::{LatLon, Tokyo};
 
-let LatLon(lat, lon) = Tokyo::new(LatLon(35.0, 135.0))
+let LatLon(lat, lon) = Tokyo::new(LatLon(35.0, 135.0))?
     .to_jgd2000()
     .to_jgd2011()
     .degrees();

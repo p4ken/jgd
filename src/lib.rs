@@ -23,11 +23,11 @@
 //!
 //! ```
 //! use geo::{Coord, LineString, MapCoords};
-//! use jgd::{DegreeRangeError, LatLon, Tokyo};
+//! use jgd::{DegreesError, LatLon, Tokyo};
 //!
 //! # fn main() -> anyhow::Result<()> {
 //! let tokyo_datum = LineString::from(vec![(135.0, 35.0), (135.1, 35.1)]);
-//! let jgd2011 = tokyo_datum.try_map_coords(|Coord { x, y }| -> Result<_, DegreeRangeError> {
+//! let jgd2011 = tokyo_datum.try_map_coords(|Coord { x, y }| -> Result<_, DegreesError> {
 //!     let LatLon(y, x) = Tokyo::new(LatLon(y, x))?
 //!         .to_jgd2000()
 //!         .to_jgd2011()
@@ -78,7 +78,7 @@ mod island;
 #[cfg(any(feature = "tky2jgd", feature = "patchjgd"))]
 mod par;
 
-pub use coord::{DegreeRangeError, Dms, LatLon};
+pub use coord::{DegreesError, Dms, LatLon};
 pub use crs::{Jgd2000, Jgd2011, Tokyo, Tokyo97};
 pub use grid::Grid;
 #[cfg(feature = "tky2jgd")]

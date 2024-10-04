@@ -95,12 +95,19 @@ impl LatLon<f64> {
         self.map(Dms::from_degrees)
     }
 
-    pub(crate) fn validate_degrees(self) -> Result<(), DegreeRangeError> {
-        if self.lat().abs() > 90. || self.lon().abs() > 180. {
-            let possibly_reversed = Self(self.lon(), self.lat()).validate_degrees().is_ok();
-            return Err(DegreeRangeError::new(possibly_reversed));
+    pub(crate) fn validate_degrees(self) -> Result<(), DegreesError> {
+        let LatLon(lat, lon) = self;
+
+        fn is_in_degrees_range(lat: f64, lon: f64) -> bool {
+            lat.abs() <= 90. && lon.abs() <= 180.
         }
-        Ok(())
+        if is_in_degrees_range(lat, lon) {
+            return Ok(());
+        }
+        if is_in_degrees_range(lon, lat) {
+            return Err(DegreesError::PossiblyReversed);
+        }
+        Err(DegreesError::NotInDegrees)
     }
 }
 impl LatLon<Dms> {
@@ -242,34 +249,36 @@ impl Sub for ECEF {
     }
 }
 
-#[derive(Debug)]
-pub struct DegreeRangeError {
-    possibly_reversed: bool,
+#[derive(Debug, PartialEq, Eq)]
+pub enum DegreesError {
+    NotInDegrees,
+    PossiblyReversed,
 }
-
-impl DegreeRangeError {
-    fn new(possibly_reversed: bool) -> Self {
-        Self { possibly_reversed }
-    }
-}
-impl fmt::Display for DegreeRangeError {
+impl fmt::Display for DegreesError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "degrees out of range")?;
 
-        if self.possibly_reversed {
+        if *self == Self::PossiblyReversed {
             write!(f, "; may be lat lon reversed?")?;
         }
 
         Ok(())
     }
 }
-impl std::error::Error for DegreeRangeError {}
+impl std::error::Error for DegreesError {}
 
 #[test]
-fn a() -> anyhow::Result<()> {
-    Err(anyhow::Error::from(DegreeRangeError::new(true)))
+fn degree_error() {
+    assert_eq!(
+        format!("{}", DegreesError::NotInDegrees),
+        "degrees out of range"
+    );
 }
+
 #[test]
-fn b() -> Result<(), DegreeRangeError> {
-    Err(DegreeRangeError::new(true))
+fn degree_error_reversed() {
+    assert_eq!(
+        format!("{}", DegreesError::PossiblyReversed),
+        "degrees out of range; may be lat lon reversed?"
+    );
 }

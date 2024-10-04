@@ -57,14 +57,14 @@ fn 雷() {
 
 #[test]
 fn 前浜() {
-    let tokyo = LatLon(Dms(140, 36, 16.01100), Dms(36, 22, 57.11200));
+    let tokyo = LatLon(Dms(36, 22, 57.11200), Dms(140, 36, 16.01100));
     let expected = LatLon(Dms(36, 23, 08.52178), Dms(140, 36, 03.99552));
     test_to_jgd2000(tokyo, expected);
 }
 
 #[test]
 fn 海上() {
-    let tokyo = LatLon(Dms(143, 00, 00.00000), Dms(36, 18, 35.99000));
+    let tokyo = LatLon(Dms(36, 18, 35.99000), Dms(143, 00, 00.00000));
     let expected = LatLon(Dms(36, 18, 47.72512), Dms(142, 59, 47.29009));
     test_to_jgd2000(tokyo, expected);
 }

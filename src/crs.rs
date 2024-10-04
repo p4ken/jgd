@@ -1,7 +1,7 @@
 use crate::{
     coord::ECEF,
     earth::{BESSEL, GRS80},
-    DegreeRangeError, LatLon,
+    DegreesError, LatLon,
 };
 
 #[cfg(feature = "tky2jgd")]
@@ -31,7 +31,7 @@ impl Tokyo {
     /// #   Ok(())
     /// # }
     /// ```
-    pub fn new(degrees: LatLon) -> Result<Self, DegreeRangeError> {
+    pub fn new(degrees: LatLon) -> Result<Self, DegreesError> {
         degrees.validate_degrees()?;
         Ok(Self { degrees })
     }
@@ -102,7 +102,7 @@ impl Tokyo97 {
     /// #   Ok(())
     /// # }
     /// ```
-    pub fn new(degrees: LatLon) -> Result<Self, DegreeRangeError> {
+    pub fn new(degrees: LatLon) -> Result<Self, DegreesError> {
         degrees.validate_degrees()?;
         Ok(Self { degrees })
     }
