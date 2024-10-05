@@ -36,7 +36,7 @@ pub struct LatLon<T = f64>(
     /// Longitude.
     pub T,
 );
-impl<T> LatLon<T> {
+impl<T: Copy> LatLon<T> {
     /// Returns latitude.
     pub fn lat(self) -> T {
         self.0
@@ -46,7 +46,8 @@ impl<T> LatLon<T> {
     pub fn lon(self) -> T {
         self.1
     }
-
+}
+impl<T> LatLon<T> {
     /// Returns self with function `f` applied to both lat and lon.
     ///
     /// # Examples
@@ -73,9 +74,8 @@ impl<T> LatLon<T> {
     /// # assert_eq!(seconds.lon(), 486000);
     /// ```
     pub fn map<U>(self, f: impl Fn(T) -> U) -> LatLon<U> {
-        let lat = f(self.0);
-        let lon = f(self.1);
-        LatLon(lat, lon)
+        let LatLon(lat, lon) = self;
+        LatLon(f(lat), f(lon))
     }
 }
 impl LatLon<f64> {
@@ -194,12 +194,12 @@ impl Dms {
         let d = deg as i32;
         let m = (deg * 60. % 60.) as i32;
         let s = (deg * 3600.) % 60.;
-        Self(d, m, s)
+        Dms(d, m, s)
     }
 
     /// Converts to decimal degrees.
     fn to_degrees(self) -> f64 {
-        let Self(d, m, s) = self;
+        let Dms(d, m, s) = self;
         f64::from(d) + f64::from(m) / 60. + s / 3_600.
     }
 }
