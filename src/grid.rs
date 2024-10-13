@@ -1,5 +1,5 @@
 use crate::{
-    coord::{MICRO_SECS, SECS},
+    geodetic::{MICRO_SECS, SECS},
     LatLon,
 };
 
@@ -153,7 +153,7 @@ mod tests {
     use approx::assert_ulps_eq;
 
     use crate::{
-        coord::{MICRO_SECS, SECS},
+        geodetic::{MICRO_SECS, SECS},
         Grid, LatLon,
     };
 

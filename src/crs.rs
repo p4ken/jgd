@@ -1,8 +1,4 @@
-use crate::{
-    coord::ECEF,
-    earth::{BESSEL, GRS80},
-    DegreesError, LatLon,
-};
+use crate::{DegreesError, LatLon, BESSEL, ECEF, GRS80};
 
 #[cfg(feature = "tky2jgd")]
 use crate::TKY2JGD;
@@ -88,7 +84,8 @@ pub struct Tokyo97 {
     degrees: LatLon,
 }
 impl Tokyo97 {
-    const TO_ITRF94: ECEF = ECEF::new(-146.414, 507.337, 680.507);
+    /// Transformation parameters to ITRF94.
+    pub const TO_ITRF94: ECEF = ECEF::new(-146.414, 507.337, 680.507);
 
     /// Constructs a [`Tokyo97`] with a coordinate in degrees.
     ///

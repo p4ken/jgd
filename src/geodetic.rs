@@ -3,11 +3,11 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
-pub(crate) const DEGREES: f64 = 1.;
-pub(crate) const MINUTES: f64 = DEGREES * 60.;
-pub(crate) const SECS: f64 = MINUTES * 60.;
-pub(crate) const MILLI_SECS: f64 = SECS * 1_000.;
-pub(crate) const MICRO_SECS: f64 = MILLI_SECS * 1_000.;
+pub const DEGREES: f64 = 1.;
+pub const MINUTES: f64 = DEGREES * 60.;
+pub const SECS: f64 = MINUTES * 60.;
+pub const MILLI_SECS: f64 = SECS * 1_000.;
+pub const MICRO_SECS: f64 = MILLI_SECS * 1_000.;
 
 /// A pair of latitude and longitude.
 ///
@@ -201,51 +201,6 @@ impl Dms {
     fn to_degrees(self) -> f64 {
         let Dms(d, m, s) = self;
         f64::from(d) + f64::from(m) / 60. + s / 3_600.
-    }
-}
-
-/// Earth-centered, Earth-fixed coordinate.
-#[derive(Debug, Clone, Copy)]
-pub struct ECEF {
-    x: f64,
-    y: f64,
-    z: f64,
-}
-impl ECEF {
-    pub const fn new(x: f64, y: f64, z: f64) -> Self {
-        Self { x, y, z }
-    }
-
-    pub fn x(&self) -> f64 {
-        self.x
-    }
-
-    pub fn y(&self) -> f64 {
-        self.y
-    }
-
-    pub fn z(&self) -> f64 {
-        self.z
-    }
-}
-impl Add for ECEF {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self::Output {
-        Self {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-            z: self.z + rhs.z,
-        }
-    }
-}
-impl Sub for ECEF {
-    type Output = Self;
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-            z: self.z - rhs.z,
-        }
     }
 }
 

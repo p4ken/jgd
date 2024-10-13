@@ -59,7 +59,7 @@
 //!
 //! パラメータグリッドによる変換は、国土地理院の `TKY2JGD` および `PatchJGD` と同等。
 //!
-//! 3パラメータによる変換は、`QGIS` などで使われる `Proj` と同等。
+//! 3パラメータによる変換は、QGIS などで使われる `Proj` と同等。
 //!
 //! オリジナルの実装との差異が 1mm 以内となるようにテストされている。
 //!
@@ -70,16 +70,17 @@
 //! - 飛田幹男ほか [日本測地系における離島位置の補正量](https://www.jstage.jst.go.jp/article/sokuchi1954/49/3/49_3_181/_pdf) (測地学会誌 49巻 3号 (2003) pp181-192)
 //! - 飛田幹男 [地震時地殻変動に伴う座標値の変化を補正するソフトウェア "PatchJGD"](https://www.jstage.jst.go.jp/article/sokuchi/55/4/55_4_355/_pdf/-char/ja) (測地学会誌 55巻 4号 (2009) pp355-367)
 
-mod coord;
 mod crs;
-mod earth;
+mod ecef;
+mod geodetic;
 mod grid;
 mod island;
 #[cfg(any(feature = "tky2jgd", feature = "patchjgd"))]
 mod par;
 
-pub use coord::{DegreesError, Dms, LatLon};
 pub use crs::{Jgd2000, Jgd2011, Tokyo, Tokyo97};
+pub use ecef::{Ellipsoid, BESSEL, ECEF, GRS80};
+pub use geodetic::{DegreesError, Dms, LatLon};
 pub use grid::Grid;
 #[cfg(feature = "tky2jgd")]
 pub use grid::TKY2JGD;
