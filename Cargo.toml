@@ -1,6 +1,6 @@
 [package]
 name = "jgd"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Transform geodetic datums used in Japan"
 keywords = ["TKY2JGD", "PatchJGD", "JGD2000", "JGD2011"]
