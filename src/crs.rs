@@ -57,9 +57,6 @@ impl Tokyo {
         }
     }
 
-    /// Transforms to [`Tokyo97`].
-    fn _to_tokyo97(&self) {}
-
     /// Returnes coordinate in degrees.
     ///
     /// # Examples
@@ -123,9 +120,6 @@ impl Tokyo97 {
         let itrf94 = BESSEL.to_ecef(self.degrees) + Self::TO_ITRF94;
         Jgd2000::new(GRS80.to_geodetic(itrf94))
     }
-
-    /// Inverse of [`Tokyo::to_tokyo97`].
-    fn _to_tokyo(&self) {}
 
     /// Returnes coordinate in degrees.
     ///

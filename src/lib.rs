@@ -59,14 +59,12 @@
 //!
 //! - 飛田幹男 [最近の測地座標系と座標変換についての考察](https://www.jstage.jst.go.jp/article/sokuchi1954/43/4/43_4_231/_pdf) (測地学会誌 43巻 4号 (1997) pp231-235)
 //! - 飛田幹男 [世界測地系移行のための座標変換ソフトウェア "TKY2JGD"](https://www.gsi.go.jp/common/000063173.pdf) (国土地理院時報 97集 (2001) pp31-51)
-//! - 飛田幹男ほか [日本測地系における離島位置の補正量](https://www.jstage.jst.go.jp/article/sokuchi1954/49/3/49_3_181/_pdf) (測地学会誌 49巻 3号 (2003) pp181-192)
 //! - 飛田幹男 [地震時地殻変動に伴う座標値の変化を補正するソフトウェア "PatchJGD"](https://www.jstage.jst.go.jp/article/sokuchi/55/4/55_4_355/_pdf/-char/ja) (測地学会誌 55巻 4号 (2009) pp355-367)
 
 mod coord;
 mod crs;
 mod earth;
 mod grid;
-mod island;
 #[cfg(any(feature = "tky2jgd", feature = "patchjgd"))]
 mod par;
 
