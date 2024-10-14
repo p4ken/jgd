@@ -1,18 +1,53 @@
-use crate::{coord::ECEF, LatLon};
+use std::ops::{Add, Sub};
 
-/// GRS80楕円体
+use crate::LatLon;
+
+/// Earth-centered, Earth-fixed coordinate.
+#[derive(Debug, Clone, Copy)]
+pub struct ECEF {
+    x: f64,
+    y: f64,
+    z: f64,
+}
+impl ECEF {
+    pub(crate) const fn new(x: f64, y: f64, z: f64) -> Self {
+        Self { x, y, z }
+    }
+}
+impl Add for ECEF {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+impl Sub for ECEF {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
+/// GRS80 ellipsoid.
 pub const GRS80: Ellipsoid = Ellipsoid {
     equatorial_radius: 6378137.0,
     polar_radius: 6356752.31424518,
 };
 
-/// Bessel楕円体
+/// Bessel ellipsoid.
 pub const BESSEL: Ellipsoid = Ellipsoid {
     equatorial_radius: 6377397.155,
     polar_radius: 6356078.963,
 };
 
-/// 回転楕円体。
+/// Earth ellipsoid.
 #[derive(Debug, Clone)]
 pub struct Ellipsoid {
     // 赤道半径 (メートル)
@@ -22,7 +57,7 @@ pub struct Ellipsoid {
     polar_radius: f64,
 }
 impl Ellipsoid {
-    /// 三次元直交座標に変換する。
+    /// Converts a geodetic coordinate to [ECEF].
     pub fn to_ecef(&self, degree: LatLon) -> ECEF {
         let LatLon(lat, lon) = degree.map(f64::to_radians);
         let geoid = self.equatorial_radius
@@ -34,14 +69,15 @@ impl Ellipsoid {
         )
     }
 
-    /// 測地座標に変換する。
+    /// Converts a [ECEF] coordinate to geodetic.
     pub fn to_geodetic(&self, ecef: ECEF) -> LatLon {
-        let p = ecef.x().hypot(ecef.y());
-        let theta = ((ecef.z() * self.equatorial_radius) / (p * self.polar_radius)).atan();
-        let lat = (ecef.z()
-            + self.polar_eccentricity() * self.polar_radius * (theta.sin().powi(3)))
-        .atan2(p - self.equatorial_eccentricity() * self.equatorial_radius * (theta.cos().powi(3)));
-        let lon = ecef.y().atan2(ecef.x());
+        let p = ecef.x.hypot(ecef.y);
+        let theta = ((ecef.z * self.equatorial_radius) / (p * self.polar_radius)).atan();
+        let lat = (ecef.z + self.polar_eccentricity() * self.polar_radius * (theta.sin().powi(3)))
+            .atan2(
+                p - self.equatorial_eccentricity() * self.equatorial_radius * (theta.cos().powi(3)),
+            );
+        let lon = ecef.y.atan2(ecef.x);
         LatLon(lat, lon).map(f64::to_degrees)
     }
 

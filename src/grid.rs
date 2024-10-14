@@ -1,5 +1,5 @@
 use crate::{
-    coord::{MICRO_SECS, SECS},
+    geodetic::{MICRO_SECS, SECS},
     LatLon,
 };
 
@@ -153,7 +153,7 @@ mod tests {
     use approx::assert_ulps_eq;
 
     use crate::{
-        coord::{MICRO_SECS, SECS},
+        geodetic::{MICRO_SECS, SECS},
         Grid, LatLon,
     };
 
@@ -211,8 +211,7 @@ mod tests {
     fn interpolate_corner() {
         let sut = Grid::new(&SMALLEST);
         let ret = sut.bilinear(LatLon(0.0, 0.0)).unwrap();
-        assert_eq!(ret.lon(), 0.0);
-        assert_eq!(ret.lat(), -6. / MICRO_SECS);
+        assert_eq!(ret, LatLon(-6. / MICRO_SECS, 0.0));
     }
 
     #[test]

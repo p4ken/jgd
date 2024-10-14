@@ -1,8 +1,4 @@
-use crate::{
-    coord::ECEF,
-    earth::{BESSEL, GRS80},
-    LatLon,
-};
+use crate::{DegreesError, LatLon, BESSEL, ECEF, GRS80};
 
 #[cfg(feature = "tky2jgd")]
 use crate::TKY2JGD;
@@ -15,21 +11,30 @@ use crate::TOUHOKUTAIHEIYOUOKI2011;
 /// 旧日本測地系。
 ///
 /// EPSG: 4301
+#[derive(Debug)]
 pub struct Tokyo {
     degrees: LatLon,
 }
 impl Tokyo {
     /// Constructs a [`Tokyo`] with a coordinate in degrees.
     ///
+    /// # Errors
+    ///
+    /// Returns [`DegreesError`] if the [`LatLon`] is out of range in degrees.
+    ///
     /// # Examples
     ///
     /// ```
     /// # use jgd::{LatLon, Tokyo};
     /// #
-    /// let jgd2011 = Tokyo::new(LatLon(35.0, 135.0)).to_jgd2000().to_jgd2011();
+    /// # fn main() -> anyhow::Result<()> {
+    /// let jgd2011 = Tokyo::new(LatLon(35.0, 135.0))?.to_jgd2000().to_jgd2011();
+    /// #   Ok(())
+    /// # }
     /// ```
-    pub fn new(degrees: LatLon) -> Self {
-        Self { degrees }
+    pub fn new(degrees: LatLon) -> Result<Self, DegreesError> {
+        degrees.validate_degrees()?;
+        Ok(Self { degrees })
     }
 
     /// Transforms to [`Jgd2000`].
@@ -46,14 +51,14 @@ impl Tokyo {
     /// ```
     /// # use jgd::{Tokyo, LatLon};
     /// #
-    /// # let tokyo = Tokyo::new(LatLon(35.0, 135.0));
+    /// # let tokyo = Tokyo::new(LatLon(35.0, 135.0)).unwrap();
     /// let LatLon(lat, lon) = tokyo.to_jgd2000().degrees();
     /// ```
     #[cfg(feature = "tky2jgd")]
     pub fn to_jgd2000(&self) -> Jgd2000 {
         match TKY2JGD.bilinear(self.degrees) {
-            Some(shift) => Jgd2000::new(self.degrees + shift),
-            None => Tokyo97::new(self.degrees).to_jgd2000(),
+            Some(shift) => Jgd2000::new_unchecked(self.degrees + shift),
+            None => Tokyo97::new_unchecked(self.degrees).to_jgd2000(),
         }
     }
 
@@ -64,7 +69,7 @@ impl Tokyo {
     /// ```
     /// # use jgd::{Tokyo, LatLon};
     /// #
-    /// # let tokyo = Tokyo::new(LatLon(35.0, 135.0));
+    /// # let tokyo = Tokyo::new(LatLon(35.0, 135.0)).unwrap();
     /// let LatLon(lat, lon) = tokyo.degrees();
     /// ```
     pub fn degrees(&self) -> LatLon {
@@ -77,27 +82,36 @@ impl Tokyo {
 /// 世界測地系を基準に、3パラメータによる変換式で定義された測地系 [(飛田, 1997)](crate#references)。
 ///
 /// 旧日本測地系で測量された座標には [`Tokyo`] の方が適している。
+#[derive(Debug)]
 pub struct Tokyo97 {
     degrees: LatLon,
 }
 impl Tokyo97 {
-    const TO_ITRF94: ECEF = ECEF::new(-146.414, 507.337, 680.507);
+    /// Transformation parameters to ITRF94.
+    pub const TO_ITRF94: ECEF = ECEF::new(-146.414, 507.337, 680.507);
 
     /// Constructs a [`Tokyo97`] with a coordinate in degrees.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DegreesError`] if the [`LatLon`] is out of range in degrees.
     ///
     /// # Examples
     ///
     /// ```
     /// # use jgd::{LatLon, Tokyo97};
     /// #
-    /// let jgd2000 = Tokyo97::new(LatLon(35.0, 135.0)).to_jgd2000();
+    /// # fn main() -> anyhow::Result<()> {
+    /// let jgd2000 = Tokyo97::new(LatLon(35.0, 135.0))?.to_jgd2000();
+    /// #   Ok(())
+    /// # }
     /// ```
-    pub fn new(degrees: LatLon) -> Self {
-        // TODO: 度単位の範囲チェック
-        //
-        // # Panics
-        //
-        // 緯度経度が度単位の範囲外だった場合、デバッグビルドでパニックする。
+    pub fn new(degrees: LatLon) -> Result<Self, DegreesError> {
+        degrees.validate_degrees()?;
+        Ok(Self { degrees })
+    }
+
+    fn new_unchecked(degrees: LatLon) -> Self {
         Self { degrees }
     }
 
@@ -111,14 +125,14 @@ impl Tokyo97 {
     /// ```
     /// # use jgd::{Tokyo97, LatLon};
     /// #
-    /// # let tokyo97 = Tokyo97::new(LatLon(35.0, 135.0));
+    /// # let tokyo97 = Tokyo97::new(LatLon(35.0, 135.0)).unwrap();
     /// let LatLon(lat, lon) = tokyo97.to_jgd2000().degrees();
     /// ```
     pub fn to_jgd2000(&self) -> Jgd2000 {
         // https://www.gsi.go.jp/LAW/G2000-g2000faq-1.htm
         // > 測地成果2000での経度・緯度は、世界測地系であるITRF94座標系とGRS80の楕円体を使用して表します
         let itrf94 = BESSEL.to_ecef(self.degrees) + Self::TO_ITRF94;
-        Jgd2000::new(GRS80.to_geodetic(itrf94))
+        Jgd2000::new_unchecked(GRS80.to_geodetic(itrf94))
     }
 
     /// Returnes coordinate in degrees.
@@ -128,7 +142,7 @@ impl Tokyo97 {
     /// ```
     /// # use jgd::{LatLon, Tokyo97};
     /// #
-    /// # let tokyo97 = Tokyo97::new(LatLon(35.0, 135.0));
+    /// # let tokyo97 = Tokyo97::new(LatLon(35.0, 135.0)).unwrap();
     /// let LatLon(lat, lon) = tokyo97.degrees();
     /// ```
     pub fn degrees(&self) -> LatLon {
@@ -141,19 +155,32 @@ impl Tokyo97 {
 /// 世界測地系。
 ///
 /// EPSG: 4612
+#[derive(Debug)]
 pub struct Jgd2000 {
     degrees: LatLon,
 }
 impl Jgd2000 {
     /// Constructs a [`Jgd2000`] with a coordinate in degrees.
     ///
+    /// # Errors
+    ///
+    /// Returns [`DegreesError`] if the [`LatLon`] is out of range in degrees.
+    ///
     /// # Examples
     ///
     /// ```
     /// # use jgd::{LatLon, Jgd2000};
     /// #
-    /// let to_jgd2011 = Jgd2000::new(LatLon(35.0, 135.0)).to_jgd2011();
-    pub fn new(degrees: LatLon) -> Self {
+    /// # fn main() -> anyhow::Result<()> {
+    ///     let to_jgd2011 = Jgd2000::new(LatLon(35.0, 135.0))?.to_jgd2011();
+    /// # Ok(())
+    /// # }
+    pub fn new(degrees: LatLon) -> Result<Self, DegreesError> {
+        degrees.validate_degrees()?;
+        Ok(Self { degrees })
+    }
+
+    fn new_unchecked(degrees: LatLon) -> Self {
         Self { degrees }
     }
 
@@ -167,7 +194,7 @@ impl Jgd2000 {
     /// ```
     /// # use jgd::{Jgd2000, LatLon};
     /// #
-    /// # let jgd2000 = Jgd2000::new(LatLon(35.0, 135.0));
+    /// # let jgd2000 = Jgd2000::new(LatLon(35.0, 135.0)).unwrap();
     /// let LatLon(lat, lon) = jgd2000.to_jgd2011().degrees();
     /// ```
     #[cfg(feature = "patchjgd")]
@@ -175,7 +202,7 @@ impl Jgd2000 {
         let shift = TOUHOKUTAIHEIYOUOKI2011
             .bilinear(self.degrees)
             .unwrap_or_default();
-        Jgd2011::new(self.degrees + shift)
+        Jgd2011::new_unchecked(self.degrees + shift)
     }
 
     /// Inverse of [`Tokyo::to_jgd2000`].
@@ -191,12 +218,12 @@ impl Jgd2000 {
     /// ```
     /// # use jgd::{Jgd2000, LatLon};
     /// #
-    /// # let jgd2000 = Jgd2000::new(LatLon(35.0, 135.0));
+    /// # let jgd2000 = Jgd2000::new(LatLon(35.0, 135.0)).unwrap();
     /// let LatLon(lat, lon) = jgd2000.to_tokyo97().degrees();
     /// ```
     pub fn to_tokyo97(&self) -> Tokyo97 {
         let itrf94 = GRS80.to_ecef(self.degrees) - Tokyo97::TO_ITRF94;
-        Tokyo97::new(BESSEL.to_geodetic(itrf94))
+        Tokyo97::new_unchecked(BESSEL.to_geodetic(itrf94))
     }
 
     /// Returnes coordinate in degrees.
@@ -206,7 +233,7 @@ impl Jgd2000 {
     /// ```
     /// # use jgd::{LatLon, Jgd2000};
     /// #
-    /// # let jgd2000 = Jgd2000::new(LatLon(35.0, 135.0));
+    /// # let jgd2000 = Jgd2000::new(LatLon(35.0, 135.0)).unwrap();
     /// let LatLon(lat, lon) = jgd2000.degrees();
     /// ```
     pub fn degrees(&self) -> LatLon {
@@ -219,12 +246,13 @@ impl Jgd2000 {
 /// 世界測地系。
 ///
 /// EPSG: 6668
+#[derive(Debug)]
 pub struct Jgd2011 {
     degrees: LatLon,
 }
 impl Jgd2011 {
     #[allow(dead_code)]
-    fn new(degrees: LatLon) -> Self {
+    fn new_unchecked(degrees: LatLon) -> Self {
         Self { degrees }
     }
 
@@ -242,7 +270,7 @@ impl Jgd2011 {
     /// ```
     /// # use jgd::{LatLon, Jgd2000};
     /// #
-    /// # let jgd2011 = Jgd2000::new(LatLon(35.0, 135.0)).to_jgd2011();
+    /// # let jgd2011 = Jgd2000::new(LatLon(35.0, 135.0)).unwrap().to_jgd2011();
     /// let LatLon(lat, lon) = jgd2011.degrees();
     /// ```
     pub fn degrees(&self) -> LatLon {

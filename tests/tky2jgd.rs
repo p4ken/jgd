@@ -6,7 +6,10 @@ use jgd::{Dms, LatLon, Tokyo};
 mod testing;
 
 fn test_to_jgd2000(tokyo: LatLon<Dms>, expected: LatLon<Dms>) {
-    let ret = Tokyo::new(tokyo.to_degrees()).to_jgd2000().degrees();
+    let ret = Tokyo::new(tokyo.to_degrees())
+        .unwrap()
+        .to_jgd2000()
+        .degrees();
     testing::assert_distance(ret, expected.to_degrees())
 }
 

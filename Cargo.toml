@@ -20,5 +20,6 @@ patchjgd = []
 [dependencies]
 
 [dev-dependencies]
+anyhow = "1.0.89"
 approx = "0.5.1"
 geo = "0.28.0"
