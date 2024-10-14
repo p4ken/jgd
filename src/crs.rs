@@ -259,7 +259,6 @@ pub struct Jgd2011 {
 impl Jgd2011 {
     #[allow(dead_code)]
     fn new_unchecked(degrees: LatLon) -> Self {
-        // TODO: 度単位の範囲チェック
         Self { degrees }
     }
 
