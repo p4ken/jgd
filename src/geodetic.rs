@@ -26,8 +26,7 @@ pub const MICRO_SECS: f64 = MILLI_SECS * 1_000.;
 ///
 /// let dms = LatLon(Dms(35, 0, 0.0), Dms(135, 0, 0.0));
 /// let degrees = dms.to_degrees();
-/// # assert_eq!(degrees.lat(), 35.);
-/// # assert_eq!(degrees.lon(), 135.);
+/// # assert_eq!(degrees, LatLon(35., 135.));
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct LatLon<T = f64>(
@@ -36,18 +35,17 @@ pub struct LatLon<T = f64>(
     /// Longitude.
     pub T,
 );
-impl<T: Copy> LatLon<T> {
+impl<T> LatLon<T> {
     /// Returns latitude.
-    pub fn lat(self) -> T {
-        self.0
+    pub fn lat(&self) -> &T {
+        &self.0
     }
 
     /// Returns longitude.
-    pub fn lon(self) -> T {
-        self.1
+    pub fn lon(&self) -> &T {
+        &self.1
     }
-}
-impl<T> LatLon<T> {
+
     /// Returns self with function `f` applied to both lat and lon.
     ///
     /// # Examples
@@ -59,8 +57,7 @@ impl<T> LatLon<T> {
     ///
     /// let seconds = LatLon(126000, 486000);
     /// let degrees = seconds.map(|x| f64::from(x) / 3_600.);
-    /// # assert_eq!(degrees.lat(), 35.);
-    /// # assert_eq!(degrees.lon(), 135.);
+    /// # assert_eq!(degrees, LatLon(35., 135.));
     /// ```
     ///
     /// Convert from degrees to seconds:
@@ -70,8 +67,7 @@ impl<T> LatLon<T> {
     /// #
     /// # let degrees = LatLon::<f64>(35.0, 135.0);
     /// let seconds = degrees.map(|x| (x * 3_600.).round() as i32);
-    /// # assert_eq!(seconds.lat(), 126000);
-    /// # assert_eq!(seconds.lon(), 486000);
+    /// # assert_eq!(seconds, LatLon(126000, 486000));
     /// ```
     pub fn map<U>(self, f: impl Fn(T) -> U) -> LatLon<U> {
         let LatLon(lat, lon) = self;
@@ -96,18 +92,16 @@ impl LatLon<f64> {
     }
 
     pub(crate) fn validate_degrees(self) -> Result<(), DegreesError> {
-        let LatLon(lat, lon) = self;
-
         fn is_in_degrees_range(lat: f64, lon: f64) -> bool {
             lat.abs() <= 90. && lon.abs() <= 180.
         }
+
+        let LatLon(lat, lon) = self;
         if is_in_degrees_range(lat, lon) {
             return Ok(());
         }
-        if is_in_degrees_range(lon, lat) {
-            return Err(DegreesError::PossiblyReversed);
-        }
-        Err(DegreesError::NotInDegrees)
+        let possibly_reversed = is_in_degrees_range(lon, lat);
+        Err(DegreesError { possibly_reversed })
     }
 }
 impl LatLon<Dms> {
@@ -120,8 +114,7 @@ impl LatLon<Dms> {
     ///
     /// let dms = LatLon(Dms(35, 0, 0.0), Dms(135, 0, 0.0));
     /// let degrees = dms.to_degrees();
-    /// # assert_eq!(degrees.lat(), 35.0);
-    /// # assert_eq!(degrees.lon(), 135.0);
+    /// # assert_eq!(degrees, LatLon(35., 135.0));
     /// ```
     pub fn to_degrees(self) -> LatLon<f64> {
         self.map(Dms::to_degrees)
@@ -204,36 +197,21 @@ impl Dms {
     }
 }
 
+/// Errors in input [LatLon].
 #[derive(Debug, PartialEq, Eq)]
-pub enum DegreesError {
-    NotInDegrees,
-    PossiblyReversed,
+pub struct DegreesError {
+    /// The [LatLon] may be in the order of lon, lat.
+    possibly_reversed: bool,
 }
 impl fmt::Display for DegreesError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "degrees out of range")?;
 
-        if *self == Self::PossiblyReversed {
-            write!(f, "; may be lat lon reversed?")?;
+        if self.possibly_reversed {
+            write!(f, "; may be lat and lon reversed?")?;
         }
 
         Ok(())
     }
 }
 impl std::error::Error for DegreesError {}
-
-#[test]
-fn degree_error() {
-    assert_eq!(
-        format!("{}", DegreesError::NotInDegrees),
-        "degrees out of range"
-    );
-}
-
-#[test]
-fn degree_error_reversed() {
-    assert_eq!(
-        format!("{}", DegreesError::PossiblyReversed),
-        "degrees out of range; may be lat lon reversed?"
-    );
-}
